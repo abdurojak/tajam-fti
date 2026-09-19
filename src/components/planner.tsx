@@ -19,6 +19,8 @@ import {
   Search,
   Sparkles,
   Upload,
+  Users,
+  Building2,
   X,
 } from "lucide-react";
 import { SAMPLES, type Content, type ContentInput } from "@/lib/domain";
@@ -37,6 +39,9 @@ import Guide from "./guide";
 import { Dialog } from "./ui";
 import { downloadBlob } from "@/lib/download";
 import { LogoutButton } from "./login-button";
+import type { AccessSummary } from "@/lib/organization";
+import MemberManager from "./member-manager";
+import OrganizationManager from "./organization-manager";
 const NAV = [
   { id: "dashboard", label: "Ringkasan", icon: LayoutDashboard },
   { id: "content", label: "Rencana konten", icon: ListTodo },
@@ -68,6 +73,14 @@ const TITLES: Record<string, { title: string; description: string }> = {
     title: "Kenali TAJAM FTI.",
     description: "Panduan sederhana untuk ritme kerja tim yang lebih terarah.",
   },
+  members: {
+    title: "Anggota dan akses.",
+    description: "Atur role serta cakupan kerja setiap anggota tim.",
+  },
+  organization: {
+    title: "Struktur FTI.",
+    description: "Kelola jurusan dan program studi tanpa kehilangan riwayat.",
+  },
 };
 async function request<T>(
   url: string,
@@ -89,10 +102,10 @@ async function request<T>(
 }
 export default function Planner({
   cloud = false,
-  memberEmail,
+  access,
 }: {
   cloud?: boolean;
-  memberEmail?: string;
+  access: AccessSummary;
 }) {
   const [rows, setRows] = useState<Content[]>([]);
   const [page, setPage] = useState("dashboard");
@@ -107,6 +120,14 @@ export default function Planner({
   const [toast, setToast] = useState<{ text: string; error?: boolean } | null>(
     null,
   );
+  const canWrite = access.capabilities.canWriteContent;
+  const navItems = access.capabilities.canManageMembers
+    ? [
+        ...NAV,
+        { id: "members", label: "Kelola anggota", icon: Users },
+        { id: "organization", label: "Kelola organisasi", icon: Building2 },
+      ]
+    : NAV;
   async function reload() {
     try {
       const data = await request<Content[]>("/api/content");
@@ -188,7 +209,11 @@ export default function Planner({
     setBusy(true);
     try {
       const { createWorkbook } = await import("@/lib/workbook");
-      const buffer = await createWorkbook(template ? [] : filtered);
+      const buffer = await createWorkbook(template ? [] : filtered, {
+        studyPrograms: access.studyPrograms
+          .filter((program) => program.active)
+          .map((program) => program.name),
+      });
       downloadBlob(
         new Blob([new Uint8Array(buffer as ArrayBuffer)], {
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -219,7 +244,7 @@ export default function Planner({
     }
   }
   const label =
-    page === "guide" ? "Panduan" : NAV.find((item) => item.id === page)?.label;
+    page === "guide" ? "Panduan" : navItems.find((item) => item.id === page)?.label;
   return (
     <div className="app-shell">
       {menu && (
@@ -253,7 +278,7 @@ export default function Planner({
         </div>
         <span className="nav-label">RUANG KERJA</span>
         <nav>
-          {NAV.map((item) => (
+          {navItems.map((item) => (
             <button
               className={`nav-item ${page === item.id ? "active" : ""}`}
               key={item.id}
@@ -290,16 +315,16 @@ export default function Planner({
           <div className="local-user">
             <span className="user-avatar">FT</span>
             <div>
-              <strong title={memberEmail}>
-                {memberEmail || "Workspace lokal"}
+              <strong title={access.email}>
+                {cloud ? access.email : "Workspace lokal"}
               </strong>
               <small>
                 <i />
-                {cloud ? "Ruang kerja online" : "Tersimpan di komputer ini"}
+                {access.role === "admin" ? "Admin" : access.role === "editor" ? "Editor" : "Viewer"} · {access.scopeLabel}
               </small>
             </div>
           </div>
-          {memberEmail && <LogoutButton />}
+          {cloud && <LogoutButton />}
         </div>
       </aside>
       <div className="main-shell">
@@ -366,6 +391,7 @@ export default function Planner({
                   onNavigate={navigate}
                   onSample={sample}
                   busy={busy}
+                  canWrite={canWrite}
                 />
               ) : (
                 <>
@@ -374,7 +400,7 @@ export default function Planner({
                       <h1>{TITLES[page].title}</h1>
                       <p>{TITLES[page].description}</p>
                     </div>
-                    {page !== "guide" && page !== "report" && (
+                    {canWrite && page !== "guide" && page !== "report" && page !== "members" && page !== "organization" && (
                       <button
                         className="button primary"
                         onClick={() => setForm(null)}
@@ -404,7 +430,7 @@ export default function Planner({
                             <ArrowDownToLine size={15} />
                             Ekspor Excel
                           </button>
-                          {page === "content" && (
+                          {canWrite && page === "content" && (
                             <button
                               className="button secondary small"
                               onClick={() => setImportOpen(true)}
@@ -423,10 +449,10 @@ export default function Planner({
                       />
                       <ContentTable
                         rows={filtered}
-                        onEdit={setForm}
-                        onDelete={setDeleting}
+                        onEdit={canWrite ? setForm : undefined}
+                        onDelete={canWrite ? setDeleting : undefined}
                         emptyAction={
-                          page === "content" ? (
+                          canWrite && page === "content" ? (
                             <button
                               className="button primary"
                               onClick={() => setForm(null)}
@@ -459,7 +485,7 @@ export default function Planner({
                           rows={active}
                         />
                       </div>
-                      <Calendar rows={filtered} onEdit={setForm} />
+                      <Calendar rows={filtered} onEdit={canWrite ? setForm : undefined} />
                     </>
                   )}
                   {page === "report" && (
@@ -480,6 +506,8 @@ export default function Planner({
                     </>
                   )}
                   {page === "guide" && <Guide cloud={cloud} />}
+                  {page === "members" && access.capabilities.canManageMembers && <MemberManager />}
+                  {page === "organization" && access.capabilities.canManageOrganization && <OrganizationManager />}
                 </>
               )}
               <footer className="app-footer">
@@ -498,6 +526,7 @@ export default function Planner({
           record={form}
           onClose={() => setForm(undefined)}
           onSave={save}
+          studyPrograms={access.studyPrograms.filter((x) => x.active).map((x) => x.name)}
         />
       )}
       {importOpen && (

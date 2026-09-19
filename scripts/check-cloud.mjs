@@ -33,7 +33,6 @@ const server = spawn(
       NEXTAUTH_SECRET: secret,
       GOOGLE_CLIENT_ID: "test-client",
       GOOGLE_CLIENT_SECRET: "test-only",
-      ALLOWED_EMAILS: "member@example.com",
     },
   },
 );
@@ -45,7 +44,7 @@ const ids = [];
 const good = await encode({
   secret,
   token: {
-    email: "member@example.com",
+    email: "labtif.fti@trisakti.ac.id",
     name: "Test member",
     teamVerified: true,
   },
@@ -112,12 +111,12 @@ try {
   });
   const unverified = await encode({
     secret,
-    token: { email: "member@example.com" },
+    token: { email: "labtif.fti@trisakti.ac.id" },
     maxAge: 600,
   });
   const expired = await encode({
     secret,
-    token: { email: "member@example.com", teamVerified: true },
+    token: { email: "labtif.fti@trisakti.ac.id", teamVerified: true },
     maxAge: -3600,
   });
   for (const token of [rejected, unverified, expired, "tampered-cookie"])

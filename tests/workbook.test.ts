@@ -4,6 +4,17 @@ import { parseWorkbook, createWorkbook, HEADERS } from "../src/lib/workbook";
 import { valid } from "./fixtures";
 import { readFileSync } from "node:fs";
 describe("impor dan ekspor Excel", () => {
+  it("menggunakan daftar prodi sesuai cakupan pada validasi template", async () => {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(
+      (await createWorkbook([], {
+        studyPrograms: ["Sistem Informasi"],
+      })) as ExcelJS.Buffer,
+    );
+    const reference = workbook.getWorksheet("Referensi");
+    expect(reference?.getCell("A2").value).toBe("Sistem Informasi");
+    expect(reference?.getCell("A3").value).toBe("");
+  });
   it("membaca template asli dengan namespace XML berawalan x", async () => {
     const buffer = readFileSync("tests/fixtures/template-original.xlsx");
     expect(await parseWorkbook(Uint8Array.from(buffer).buffer)).toEqual([]);

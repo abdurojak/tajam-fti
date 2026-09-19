@@ -29,26 +29,23 @@ describe("cloud access", () => {
     expect(isEmailAllowed("a@example.com.evil", "a@example.com")).toBe(false);
     expect(isEmailAllowed("someone@example.com", "")).toBe(false);
   });
-  it("requires Google verified identity and an allowed address", () => {
+  it("requires a Google verified identity", () => {
     expect(
       googleSignInAllowed(
         "google",
         { email: "a@example.com", email_verified: true },
-        "a@example.com",
       ),
     ).toBe(true);
     expect(
       googleSignInAllowed(
         "google",
         { email: "a@example.com", email_verified: false },
-        "a@example.com",
       ),
     ).toBe(false);
     expect(
       googleSignInAllowed(
         "other",
         { email: "a@example.com", email_verified: true },
-        "a@example.com",
       ),
     ).toBe(false);
   });
@@ -60,13 +57,12 @@ describe("cloud access", () => {
       NEXTAUTH_SECRET: "x".repeat(40),
       GOOGLE_CLIENT_ID: "id",
       GOOGLE_CLIENT_SECRET: "secret",
-      ALLOWED_EMAILS: "a@example.com",
     };
     expect(authConfigurationReady(env)).toBe(true);
     expect(
       authConfigurationReady({ ...env, NEXTAUTH_URL: "http://tajam.example" }),
     ).toBe(false);
-    expect(authConfigurationReady({ ...env, ALLOWED_EMAILS: "" })).toBe(false);
+    expect(authConfigurationReady(env)).toBe(true);
   });
   it("checks the configured HTTPS origin behind a serverless proxy", () => {
     vi.stubEnv("NEXTAUTH_URL", "https://tajam.example");

@@ -1,8 +1,14 @@
 export const PRODI = [
-  "Teknik Mesin",
   "Teknik Informatika",
+  "Sistem Informasi",
   "Teknik Elektro",
+  "Magister Teknik Elektro",
   "Teknik Industri",
+  "Magister Teknik Industri",
+  "Doktor Teknik Industri",
+  "Teknik Mesin",
+  "Magister Teknik Mesin",
+  "Program Profesi Insinyur",
 ] as const;
 export const CATEGORIES = [
   "Conversation",
@@ -138,7 +144,6 @@ export function validateContent(input: unknown) {
       errors[field] = `${LABELS[field]} terlalu panjang.`;
   }
   const enums: Partial<Record<Field, readonly string[]>> = {
-    prodi: PRODI,
     category: CATEGORIES,
     status: STATUSES,
     format: FORMATS,
