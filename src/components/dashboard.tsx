@@ -83,6 +83,7 @@ export default function Dashboard({
   onNavigate,
   onSample,
   busy,
+  canWrite = true,
 }: {
   rows: Content[];
   onAdd: () => void;
@@ -90,6 +91,7 @@ export default function Dashboard({
   onNavigate: (page: string) => void;
   onSample: () => void;
   busy: boolean;
+  canWrite?: boolean;
 }) {
   const active = rows.filter((r) => r.status !== "Batal");
   const published = active.filter((r) => r.status === "Terbit").length;
@@ -119,11 +121,13 @@ export default function Dashboard({
             Rencanakan, kerjakan, dan bagikan cerita terbaik FTI.
             <br className="desktop-only" /> Semua ide tim, dalam satu ruang.
           </p>
-          <button className="button dark" onClick={onAdd}>
-            <Plus size={17} />
-            Rencanakan konten
-            <ArrowUpRight size={17} />
-          </button>
+          {canWrite && (
+            <button className="button dark" onClick={onAdd}>
+              <Plus size={17} />
+              Rencanakan konten
+              <ArrowUpRight size={17} />
+            </button>
+          )}
         </div>
         <div className="hero-art" aria-hidden="true">
           <div className="orbit orbit-one" />
@@ -219,9 +223,9 @@ export default function Dashboard({
           </div>
           <ContentTable
             rows={recent}
-            onEdit={onEdit}
+            onEdit={canWrite ? onEdit : undefined}
             compact
-            emptyAction={
+            emptyAction={canWrite ? (
               <div className="empty-actions">
                 <button className="button primary" onClick={onAdd}>
                   <Plus size={16} />
@@ -235,7 +239,7 @@ export default function Dashboard({
                   {busy ? "Memuat…" : "Coba data contoh"}
                 </button>
               </div>
-            }
+            ) : undefined}
           />
           <div className="panel-foot">
             <span className="mini-dot" /> Setiap ide punya kesempatan menjadi
@@ -281,7 +285,8 @@ export default function Dashboard({
                 <button
                   className="upcoming-item"
                   key={row.id}
-                  onClick={() => onEdit(row)}
+                  onClick={() => canWrite && onEdit(row)}
+                  disabled={!canWrite}
                 >
                   <span className="date-tile">
                     <strong>{row.uploadDate.slice(8)}</strong>

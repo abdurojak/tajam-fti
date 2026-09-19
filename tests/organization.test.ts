@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  accessSummary,
   capabilitiesFor,
   localAdminAccess,
   normalizeMember,
@@ -96,5 +97,27 @@ describe("organization authorization", () => {
       scopeType: "global",
       allowedProgramIds: null,
     });
+  });
+
+  it("returns only scoped organization choices to non-admin users", () => {
+    const summary = accessSummary(
+      {
+        email: "aszani@trisakti.ac.id",
+        role: "editor",
+        scopeType: "study_program",
+        scopeId: "sistem-informasi",
+        allowedProgramIds: ["sistem-informasi"],
+      },
+      {
+        departments: [
+          { id: "teknik-informatika", name: "Jurusan Teknik Informatika", active: true },
+          { id: "teknik-elektro", name: "Jurusan Teknik Elektro", active: true },
+        ],
+        studyPrograms: programs,
+      },
+    );
+    expect(summary.studyPrograms.map((x) => x.id)).toEqual(["sistem-informasi"]);
+    expect(summary.departments.map((x) => x.id)).toEqual(["teknik-informatika"]);
+    expect(summary.scopeLabel).toBe("Sistem Informasi");
   });
 });

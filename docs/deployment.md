@@ -27,7 +27,7 @@ https://nama-situs.netlify.app/api/auth/callback/google
 
 Untuk pengujian lokal gunakan URI terpisah, misalnya `http://localhost:3000/api/auth/callback/google`, dan gunakan host yang sama pada `NEXTAUTH_URL` serta browser. Jika domain berubah, perbarui kedua konfigurasi.
 
-Aplikasi hanya meminta identitas, email, dan profil (`openid email profile`). Izin Gmail/Calendar belum diminta. Email harus terverifikasi Google dan tercantum di `ALLOWED_EMAILS`; tidak ada pendaftaran bebas. Daftar email diperiksa lagi pada setiap permintaan sehingga penghapusan anggota berlaku setelah konfigurasi terbaru dideploy. Sesi berlaku delapan jam.
+Aplikasi hanya meminta identitas, email, dan profil (`openid email profile`). Izin Gmail/Calendar belum diminta. Email harus terverifikasi Google dan tercatat sebagai anggota aktif di database; tidak ada pendaftaran bebas. Role dan cakupan diperiksa lagi pada setiap permintaan sehingga perubahan Admin berlaku langsung tanpa deployment. Sesi berlaku delapan jam.
 
 ## 3. Hubungkan Netlify dengan GitHub
 
@@ -42,7 +42,6 @@ Tambahkan environment berikut di dashboard Netlify. Terapkan untuk **Builds dan 
 | `NEXTAUTH_SECRET` | Nilai acak rahasia, minimal 32 karakter |
 | `GOOGLE_CLIENT_ID` | Client ID OAuth Google |
 | `GOOGLE_CLIENT_SECRET` | Client secret OAuth Google |
-| `ALLOWED_EMAILS` | Email anggota, dipisahkan koma |
 
 Buat secret lokal dengan `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`, lalu simpan hanya di environment. Jangan menggunakan nilai contoh sebagai secret asli. Jangan memberi awalan `NEXT_PUBLIC_` pada nilai di atas.
 

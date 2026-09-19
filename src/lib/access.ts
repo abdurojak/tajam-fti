@@ -23,21 +23,21 @@ export function isEmailAllowed(
 export function googleSignInAllowed(
   provider: unknown,
   profile: unknown,
-  allowlist?: string,
 ) {
   if (provider !== "google" || !profile || typeof profile !== "object")
     return false;
   const google = profile as { email?: unknown; email_verified?: unknown };
   return (
-    google.email_verified === true && isEmailAllowed(google.email, allowlist)
+    google.email_verified === true &&
+    typeof google.email === "string" &&
+    !!google.email.trim()
   );
 }
 export function authConfigurationReady(env: Environment = process.env) {
   if (
     !env.GOOGLE_CLIENT_ID ||
     !env.GOOGLE_CLIENT_SECRET ||
-    (env.NEXTAUTH_SECRET?.length ?? 0) < 32 ||
-    !env.ALLOWED_EMAILS?.trim()
+    (env.NEXTAUTH_SECRET?.length ?? 0) < 32
   )
     return false;
   try {

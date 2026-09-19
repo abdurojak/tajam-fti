@@ -19,12 +19,19 @@ export default function ContentForm({
   record,
   onClose,
   onSave,
+  studyPrograms = [...PRODI],
 }: {
   record: Content | null;
   onClose: () => void;
   onSave: (data: ContentInput, id?: string) => Promise<void>;
+  studyPrograms?: string[];
 }) {
-  const [form, setForm] = useState<ContentInput>(record ?? { ...EMPTY });
+  const [form, setForm] = useState<ContentInput>(
+    record ?? {
+      ...EMPTY,
+      prodi: studyPrograms.length === 1 ? studyPrograms[0] : "",
+    },
+  );
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -123,7 +130,14 @@ export default function ContentForm({
             <h3>Tangkap & arahkan</h3>
           </div>
           <div className="form-grid">
-            {field("prodi", PRODI)}
+            {studyPrograms.length === 1 ? (
+              <label className="field">
+                <span>Program studi</span>
+                <input value={studyPrograms[0]} disabled />
+              </label>
+            ) : (
+              field("prodi", studyPrograms)
+            )}
             {field("category", CATEGORIES)}
             {field("activity")}
             {field("idea")}

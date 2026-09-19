@@ -13,7 +13,7 @@ export default function Calendar({
   onEdit,
 }: {
   rows: Content[];
-  onEdit: (r: Content) => void;
+  onEdit?: (r: Content) => void;
 }) {
   const [month, setMonth] = useState(() => today().slice(0, 7));
   const [kind, setKind] = useState("all");
@@ -135,7 +135,8 @@ export default function Calendar({
                     key={event.row.id + event.type}
                     className={`calendar-event ${event.type}`}
                     title={`${event.type === "event" ? "Acara" : "Upload"}: ${event.row.idea}`}
-                    onClick={() => onEdit(event.row)}
+                    onClick={() => onEdit?.(event.row)}
+                    disabled={!onEdit}
                   >
                     <i />
                     {event.row.idea}

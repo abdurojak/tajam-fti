@@ -116,7 +116,10 @@ export async function parseWorkbook(
   });
   return result;
 }
-export async function createWorkbook(rows: ContentInput[] = []) {
+export async function createWorkbook(
+  rows: ContentInput[] = [],
+  options: { studyPrograms?: readonly string[] } = {},
+) {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "TAJAM FTI";
   const sheet = workbook.addWorksheet("Template Import", {
@@ -160,7 +163,13 @@ export async function createWorkbook(rows: ContentInput[] = []) {
     "Format",
     "Channel",
   ]);
-  const enums = [PRODI, CATEGORIES, STATUSES, FORMATS, CHANNELS];
+  const enums = [
+    options.studyPrograms ?? PRODI,
+    CATEGORIES,
+    STATUSES,
+    FORMATS,
+    CHANNELS,
+  ];
   for (let i = 0; i < 10; i++)
     ref.addRow(enums.map((values) => values[i] ?? ""));
   ref.columns.forEach((c) => (c.width = 24));

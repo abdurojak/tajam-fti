@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { AuthorizationError } from "./organization";
 export function mutationAllowed(request: Request) {
   const origin = request.headers.get("origin");
   const url = new URL(request.url);
@@ -30,6 +31,11 @@ export async function readJson(request: Request) {
 }
 export function fail(error: unknown) {
   console.error(error);
+  if (error instanceof AuthorizationError)
+    return NextResponse.json(
+      { error: error.message },
+      { status: 403, headers: { "Cache-Control": "private, no-store" } },
+    );
   return NextResponse.json(
     {
       error:

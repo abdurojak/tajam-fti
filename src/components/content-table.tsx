@@ -85,7 +85,7 @@ export function FilterBar({
           onChange={(e) => update("prodi", e.target.value)}
         >
           <option value="">Semua prodi</option>
-          {PRODI.map((x) => (
+          {Array.from(new Set(rows.map((x) => x.prodi))).sort().map((x) => (
             <option key={x}>{x}</option>
           ))}
         </select>
@@ -152,7 +152,7 @@ export default function ContentTable({
   emptyAction,
 }: {
   rows: Content[];
-  onEdit: (r: Content) => void;
+  onEdit?: (r: Content) => void;
   onDelete?: (r: Content) => void;
   compact?: boolean;
   emptyAction?: React.ReactNode;
@@ -183,9 +183,13 @@ export default function ContentTable({
           {rows.map((row) => (
             <tr key={row.id}>
               <td>
-                <button className="content-title" onClick={() => onEdit(row)}>
-                  {row.idea}
-                </button>
+                {onEdit ? (
+                  <button className="content-title" onClick={() => onEdit(row)}>
+                    {row.idea}
+                  </button>
+                ) : (
+                  <strong>{row.idea}</strong>
+                )}
                 <div className="content-meta">
                   <span
                     className={`prodi-dot prodi-${PRODI.indexOf(row.prodi as (typeof PRODI)[number])}`}
@@ -223,13 +227,15 @@ export default function ContentTable({
                       <ArrowUpRight size={17} />
                     </a>
                   )}
-                  <button
-                    className="icon-button"
-                    aria-label={`Edit ${row.idea}`}
-                    onClick={() => onEdit(row)}
-                  >
-                    <Pencil size={16} />
-                  </button>
+                  {onEdit && (
+                    <button
+                      className="icon-button"
+                      aria-label={`Edit ${row.idea}`}
+                      onClick={() => onEdit(row)}
+                    >
+                      <Pencil size={16} />
+                    </button>
+                  )}
                   {onDelete && (
                     <button
                       className="icon-button danger-hover"

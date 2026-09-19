@@ -2656,3 +2656,18 @@ textarea {
     transition: none !important;
   }
 }
+
+.admin-grid { display: grid; gap: 20px; }
+.admin-inline, .member-fields { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(170px, auto) auto; gap: 10px; align-items: center; margin-bottom: 18px; }
+.admin-list { display: grid; gap: 10px; }
+.admin-row, .member-row { display: flex; gap: 10px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+.admin-row > input { flex: 1; }
+.admin-row > select { max-width: 260px; }
+.member-row .member-fields { flex: 1; margin: 0; grid-template-columns: minmax(220px, 1.5fr) repeat(3, minmax(130px, 1fr)); }
+.admin-form-actions { display: flex; justify-content: flex-end; margin: -8px 0 18px; }
+.status-chip { display: inline-flex; padding: 5px 9px; border-radius: 999px; background: #e8f2e9; color: #315c38; font-size: 12px; font-weight: 700; }
+.status-chip.inactive { background: #f2eeee; color: #765c5c; }
+@media (max-width: 900px) {
+  .admin-inline, .member-fields, .member-row .member-fields { grid-template-columns: 1fr; }
+  .admin-row, .member-row { align-items: stretch; flex-direction: column; }
+}

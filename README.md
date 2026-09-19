@@ -48,7 +48,7 @@ Untuk pengujian terisolasi, variabel `TAJAM_DB_PATH` dapat menunjuk file lain. J
 
 ## Batas versi ini
 
-- **Login Google tersedia untuk mode cloud**, dibatasi `ALLOWED_EMAILS`. Semua anggota memiliki akses penuh ke data tim. Mode lokal tanpa environment cloud tetap tanpa login dan hanya mendengarkan loopback.
+- **Login Google tersedia untuk mode cloud** dan keanggotaan, role, serta cakupan jurusan/prodi dikelola Admin dari database. Mode lokal tanpa environment cloud tetap tanpa login, berperan sebagai Admin, dan hanya mendengarkan loopback.
 - **Google Calendar belum tersinkron otomatis.** Ekspor ICS adalah impor manual. Mengubah data aplikasi tidak otomatis mengubah acara yang sudah diimpor. OAuth, izin kalender, dan reminder Google merupakan tahap integrasi berikutnya.
 - Deployment Netlify wajib memakai `DATABASE_URL` PostgreSQL/Neon. Konfigurasi login yang belum lengkap menutup akses; tidak ada fallback SQLite di runtime serverless.
 
