@@ -35,6 +35,7 @@ type ProgramRow = {
   department_id: string;
   name: string;
   active: boolean;
+  department_active?: boolean;
 };
 
 function hydrate(row: Row): Content {
@@ -102,12 +103,15 @@ export function createPostgresStore(pool: Pool) {
     access: AccessContext,
   ) {
     const result = await executor.query<ProgramRow>(
-      "SELECT id,department_id,name,active FROM study_programs WHERE lower(name)=lower($1)",
+      `SELECT p.id,p.department_id,p.name,p.active,d.active AS department_active
+       FROM study_programs p JOIN departments d ON d.id=p.department_id
+       WHERE lower(p.name)=lower($1)`,
       [prodi],
     );
     if (result.rowCount !== 1) throw new Error("Program studi tidak ditemukan.");
     const program = result.rows[0];
-    if (!program.active) throw new Error("Program studi sudah dinonaktifkan.");
+    if (!program.active || !program.department_active)
+      throw new Error("Program studi atau jurusannya sudah dinonaktifkan.");
     if (!isProgramAllowed(access, program.id))
       throw new AuthorizationError("Program studi berada di luar cakupan Anda.");
     return program;

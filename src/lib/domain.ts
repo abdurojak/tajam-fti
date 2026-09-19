@@ -144,7 +144,6 @@ export function validateContent(input: unknown) {
       errors[field] = `${LABELS[field]} terlalu panjang.`;
   }
   const enums: Partial<Record<Field, readonly string[]>> = {
-    prodi: PRODI,
     category: CATEGORIES,
     status: STATUSES,
     format: FORMATS,

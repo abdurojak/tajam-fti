@@ -37,4 +37,9 @@ describe("organizational migration", () => {
       sql.indexOf("ALTER COLUMN study_program_id SET NOT NULL"),
     );
   });
+
+  it("does not overwrite organization data that an Admin has edited", () => {
+    expect(sql).not.toMatch(/ON CONFLICT \([^)]*\) DO UPDATE/);
+    expect(sql).toContain("VALUES ('002-organizational-access.sql')");
+  });
 });

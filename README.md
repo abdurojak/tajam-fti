@@ -35,6 +35,7 @@ Server default hanya mendengarkan loopback komputer ini. Tidak memerlukan Neon, 
 - Ekspor `.xlsx` sesuai filter. Template baru memiliki dropdown Draf/Terbit/Batal.
 - Laporan dengan grafik kategori/prodi, status, dan seluruh detail. Pilih **Unduh PDF** untuk unduhan langsung, atau **Cetak** untuk dialog cetak browser. PDF menggunakan A4 landscape.
 - Layout responsif, panduan penggunaan, dan opsi memuat tiga contoh template secara eksplisit. Data awal kosong.
+- Akses tim berbasis database: Admin untuk seluruh FTI, Editor untuk jurusan/prodi, dan Viewer baca-saja untuk jurusan/prodi. Admin dapat mengelola anggota serta struktur organisasi dari aplikasi.
 
 ## Aturan template
 

@@ -59,10 +59,10 @@ export function createStore(path: string) {
   const now = new Date().toISOString();
   const seed = db.transaction(() => {
     const department = db.prepare(`INSERT INTO departments(id,name,active,createdAt,updatedAt)
-      VALUES(?,?,1,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,updatedAt=excluded.updatedAt`);
+      VALUES(?,?,1,?,?) ON CONFLICT(id) DO NOTHING`);
     for (const row of INITIAL_DEPARTMENTS) department.run(row.id, row.name, now, now);
     const program = db.prepare(`INSERT INTO study_programs(id,departmentId,name,active,createdAt,updatedAt)
-      VALUES(?,?,?,1,?,?) ON CONFLICT(id) DO UPDATE SET departmentId=excluded.departmentId,name=excluded.name,updatedAt=excluded.updatedAt`);
+      VALUES(?,?,?,1,?,?) ON CONFLICT(id) DO NOTHING`);
     for (const row of INITIAL_STUDY_PROGRAMS)
       program.run(row.id, row.departmentId, row.name, now, now);
     const member = db.prepare(`INSERT INTO team_members(email,role,scopeType,departmentId,studyProgramId,active,createdAt,updatedAt)
@@ -117,9 +117,12 @@ export function createStore(path: string) {
     return result.data;
   };
   const resolveProgram = (name: string, access: AccessContext) => {
-    const rows = db.prepare("SELECT id,departmentId,name,active FROM study_programs WHERE name=? COLLATE NOCASE").all(name) as any[];
+    const rows = db.prepare(`SELECT p.id,p.departmentId,p.name,p.active,d.active AS departmentActive
+      FROM study_programs p JOIN departments d ON d.id=p.departmentId
+      WHERE p.name=? COLLATE NOCASE`).all(name) as any[];
     if (rows.length !== 1) throw new Error("Program studi tidak ditemukan.");
-    if (!rows[0].active) throw new Error("Program studi sudah dinonaktifkan.");
+    if (!rows[0].active || !rows[0].departmentActive)
+      throw new Error("Program studi atau jurusannya sudah dinonaktifkan.");
     if (!isProgramAllowed(access, rows[0].id)) throw new AuthorizationError("Program studi berada di luar cakupan Anda.");
     return rows[0];
   };

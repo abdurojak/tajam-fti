@@ -1,8 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import { existsSync, rmSync } from "node:fs";
+import { join } from "node:path";
 import { createStore } from "../src/lib/store";
 import { localAdminAccess, type AccessContext } from "../src/lib/organization";
 
 const admin = localAdminAccess();
+const databasePath = join(process.cwd(), "data", "organization-restart-test.db");
+
+afterEach(() => {
+  for (const suffix of ["", "-shm", "-wal"])
+    if (existsSync(databasePath + suffix)) rmSync(databasePath + suffix);
+});
 const viewer: AccessContext = {
   email: "viewer@trisakti.ac.id",
   role: "viewer",
@@ -85,5 +93,26 @@ describe("organization administration", () => {
       ),
     ).toThrow("minimal satu Admin aktif");
     store.close();
+  });
+
+  it("preserves Admin changes when the local database is reopened", () => {
+    const store = createStore(databasePath);
+    store.saveDepartment(
+      {
+        id: "teknik-informatika",
+        name: "Jurusan Informatika",
+        active: true,
+      },
+      admin,
+    );
+    store.close();
+
+    const reopened = createStore(databasePath);
+    expect(
+      reopened
+        .listAdministration(admin)
+        .departments.find((item) => item.id === "teknik-informatika")?.name,
+    ).toBe("Jurusan Informatika");
+    reopened.close();
   });
 });

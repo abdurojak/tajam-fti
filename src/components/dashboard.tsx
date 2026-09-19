@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import {
   CATEGORIES,
-  PRODI,
   dateLabel,
   today,
   type Content,
@@ -26,7 +25,10 @@ export function Distribution({
   rows: Content[];
   by?: "category" | "prodi";
 }) {
-  const choices = by === "category" ? CATEGORIES : PRODI;
+  const choices =
+    by === "category"
+      ? CATEGORIES
+      : Array.from(new Set(rows.map((row) => row.prodi))).sort();
   const max = Math.max(
     1,
     ...choices.map((c) => rows.filter((r) => r[by] === c).length),
