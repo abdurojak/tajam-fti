@@ -1,0 +1,14 @@
+node_modules/
+.next/
+data/
+.env*
+!.env.example
+*.tsbuildinfo
+test-results/
+*.log
+.netlify/
+*.db
+*.db-wal
+*.db-shm
+*.pem
+*.key
