@@ -27,3 +27,5 @@ Final handoff (2026-09-19): production server running at http://127.0.0.1:3000; 
 - TypeScript dan build produksi berhasil. npm audit production: 0 vulnerabilities.
 - Review independen tidak menemukan bug penting pada cakupan autentikasi, adapter database, dan pengecualian publikasi.
 - Belum diuji: callback OAuth Google nyata, koneksi Neon milik pengguna, deployment Netlify live. Tes sesi memakai token terenkripsi lokal dan kredensial OAuth dummy khusus proses pengujian; tidak ada jalur bypass autentikasi pada aplikasi.
+
+Repositori publik terverifikasi: https://github.com/abdurojak/tajam-fti (branch main). File environment rahasia, data SQLite, hasil tes, log, dan node_modules tidak dilacak Git.
