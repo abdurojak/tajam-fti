@@ -17,11 +17,30 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)(
       pool = new Pool({ connectionString: process.env.TEST_DATABASE_URL });
       await pool.query(readFileSync("db/001-content.sql", "utf8"));
       await pool.query(readFileSync("db/002-organizational-access.sql", "utf8"));
+      await pool.query(readFileSync("db/003-google-calendar-sync.sql", "utf8"));
       const { createPostgresStore } = await import("../src/lib/postgres-store");
       store = createPostgresStore(pool);
     });
     beforeEach(async () => {
+      await pool.query("DELETE FROM content_calendar_events");
       await pool.query("DELETE FROM content");
+    });
+    it("queues an upsert and keeps a delete tombstone", async () => {
+      const created = await store.create(valid, admin);
+      expect(await store.getCalendarJob(created.id, admin)).toMatchObject({
+        contentId: created.id,
+        desiredAction: "upsert",
+        syncStatus: "pending",
+      });
+      await store.update(created.id, { ...valid, status: "Batal" }, admin);
+      expect(await store.getCalendarJob(created.id, admin)).toMatchObject({
+        desiredAction: "delete",
+      });
+      await store.remove(created.id, admin);
+      expect(await store.getCalendarJob(created.id, admin)).toMatchObject({
+        desiredAction: "delete",
+        content: null,
+      });
     });
     afterAll(async () => {
       await pool?.end();
@@ -69,7 +88,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)(
       const row = await store.create(valid, admin);
       const updated = { ...valid, status: "Terbit" };
       await store.update(row.id, updated, admin);
-      expect(await store.import([updated, valid], admin)).toEqual({
+      expect(await store.import([updated, valid], admin)).toMatchObject({
         added: 1,
         skipped: 1,
       });

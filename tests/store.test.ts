@@ -27,8 +27,10 @@ describe("penyimpanan SQLite", () => {
   });
   it("melewati duplikat pada impor berulang", () => {
     const s = createStore(":memory:");
-    expect(s.import([valid, valid], admin)).toEqual({ added: 1, skipped: 1 });
-    expect(s.import([valid], admin)).toEqual({ added: 0, skipped: 1 });
+    const first = s.import([valid, valid], admin);
+    expect(first).toMatchObject({ added: 1, skipped: 1 });
+    expect(first.ids).toHaveLength(1);
+    expect(s.import([valid], admin)).toEqual({ added: 0, skipped: 1, ids: [] });
     s.close();
   });
   it("menolak seluruh batch jika satu data invalid", () => {

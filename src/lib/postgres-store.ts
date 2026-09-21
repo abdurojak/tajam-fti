@@ -21,6 +21,11 @@ import {
   type StudyProgram,
   type StudyProgramCommand,
 } from "./organization";
+import {
+  googleEventId,
+  type CalendarContent,
+  type CalendarJob,
+} from "./calendar-sync";
 
 type Row = {
   id: string;
@@ -28,6 +33,8 @@ type Row = {
   program_name: string;
   created_at: Date;
   updated_at: Date;
+  sync_status?: "pending" | "synced" | "failed" | null;
+  last_error?: string | null;
 };
 
 type ProgramRow = {
@@ -38,13 +45,17 @@ type ProgramRow = {
   department_active?: boolean;
 };
 
-function hydrate(row: Row): Content {
+function hydrate(row: Row): CalendarContent {
   return {
     ...row.payload,
     prodi: row.program_name,
     id: row.id,
     createdAt: row.created_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),
+    calendarSync: {
+      status: row.sync_status ?? "failed",
+      error: row.last_error ?? (row.sync_status ? null : "Google Calendar belum dikonfigurasi."),
+    },
   };
 }
 function clean(input: unknown) {
@@ -66,6 +77,7 @@ function mapProgram(row: ProgramRow): StudyProgram {
 }
 
 export function createPostgresStore(pool: Pool) {
+  const calendarId = () => process.env.GOOGLE_CALENDAR_ID?.trim() || null;
   async function write<T>(action: (client: PoolClient) => Promise<T>): Promise<T> {
     const client = await pool.connect();
     try {
@@ -117,8 +129,28 @@ export function createPostgresStore(pool: Pool) {
     return program;
   }
 
-  const select = `SELECT c.id,c.payload,p.name AS program_name,c.created_at,c.updated_at
-    FROM content c JOIN study_programs p ON p.id=c.study_program_id`;
+  const select = `SELECT c.id,c.payload,p.name AS program_name,c.created_at,c.updated_at,
+      ce.sync_status,ce.last_error
+    FROM content c JOIN study_programs p ON p.id=c.study_program_id
+    LEFT JOIN content_calendar_events ce ON ce.content_id=c.id`;
+
+  async function enqueue(
+    client: PoolClient,
+    contentId: string,
+    studyProgramId: string,
+    status: string,
+  ) {
+    await client.query(
+      `INSERT INTO content_calendar_events
+        (content_id,study_program_id,calendar_id,google_event_id,desired_action,sync_status,last_error,updated_at)
+       VALUES($1,$2,$3,$4,$5,'pending',NULL,now())
+       ON CONFLICT(content_id) DO UPDATE SET
+         study_program_id=EXCLUDED.study_program_id,
+         desired_action=EXCLUDED.desired_action,
+         sync_status='pending',last_error=NULL,updated_at=now()`,
+      [contentId, studyProgramId, calendarId(), googleEventId(contentId), status === "Batal" ? "delete" : "upsert"],
+    );
+  }
 
   const requireAdmin = (access: AccessContext) => {
     if (access.role !== "admin") throw new AuthorizationError();
@@ -191,7 +223,8 @@ export function createPostgresStore(pool: Pool) {
            RETURNING id,payload,$5::text AS program_name,created_at,updated_at`,
           [randomUUID(), JSON.stringify(data), key(data), program.id, program.name],
         );
-        return hydrate(result.rows[0]);
+        await enqueue(client, result.rows[0].id, program.id, data.status);
+        return { ...hydrate(result.rows[0]), calendarSync: { status: "pending", error: null } };
       });
     },
     async update(id: string, input: unknown, access: AccessContext) {
@@ -211,7 +244,9 @@ export function createPostgresStore(pool: Pool) {
            WHERE id=$4 RETURNING id,payload,$5::text AS program_name,created_at,updated_at`,
           [JSON.stringify(data), key(data), program.id, id, program.name],
         );
-        return result.rows[0] ? hydrate(result.rows[0]) : null;
+        if (!result.rows[0]) return null;
+        await enqueue(client, id, program.id, data.status);
+        return { ...hydrate(result.rows[0]), calendarSync: { status: "pending", error: null } };
       });
     },
     async remove(id: string, access: AccessContext) {
@@ -224,6 +259,7 @@ export function createPostgresStore(pool: Pool) {
         if (!row.rows[0]) return false;
         if (!isProgramAllowed(access, row.rows[0].study_program_id))
           throw new AuthorizationError();
+        await enqueue(client, id, row.rows[0].study_program_id, "Batal");
         return (await client.query("DELETE FROM content WHERE id=$1", [id])).rowCount !== 0;
       });
     },
@@ -243,17 +279,67 @@ export function createPostgresStore(pool: Pool) {
           payload,
           studyProgramId: programs.get(payload.prodi.toLowerCase())!.id,
         }));
-        const result = await client.query(
+        const result = await client.query<{ id: string; study_program_id: string; status: string }>(
           `INSERT INTO content (id,fingerprint,payload,study_program_id)
            SELECT row.id,row.fingerprint,row.payload,row.study_program_id
            FROM jsonb_to_recordset($1::jsonb)
              AS row(id text,fingerprint text,payload jsonb,study_program_id text)
-           WHERE NOT EXISTS (SELECT 1 FROM content WHERE content.fingerprint=row.fingerprint)`,
+           WHERE NOT EXISTS (SELECT 1 FROM content WHERE content.fingerprint=row.fingerprint)
+           RETURNING id,study_program_id,payload->>'status' AS status`,
           [JSON.stringify(batch.map((x) => ({ ...x, study_program_id: x.studyProgramId })))],
         );
         const added = result.rowCount ?? 0;
-        return { added, skipped: inputs.length - added };
+        for (const row of result.rows)
+          await enqueue(client, row.id, row.study_program_id, row.status);
+        return { added, skipped: inputs.length - added, ids: result.rows.map((row) => row.id) };
       });
+    },
+    async getCalendarJob(id: string, access: AccessContext): Promise<CalendarJob | null> {
+      const rows = await this.listCalendarJobs([id], 1, access);
+      return rows[0] ?? null;
+    },
+    async listCalendarJobs(ids: string[], limit: number, access: AccessContext): Promise<CalendarJob[]> {
+      if (!ids.length) return [];
+      const allowed = access.allowedProgramIds;
+      const result = await pool.query<any>(
+        `SELECT ce.*,c.payload,p.name AS program_name,c.created_at,c.updated_at
+         FROM content_calendar_events ce
+         LEFT JOIN content c ON c.id=ce.content_id
+         LEFT JOIN study_programs p ON p.id=c.study_program_id
+         WHERE ce.content_id=ANY($1::text[])
+           AND ($2::text[] IS NULL OR ce.study_program_id=ANY($2::text[]))
+         ORDER BY ce.updated_at,ce.content_id LIMIT $3`,
+        [ids, allowed, Math.max(1, Math.min(limit, 20))],
+      );
+      return result.rows.map((row: any) => ({
+        contentId: row.content_id,
+        studyProgramId: row.study_program_id,
+        calendarId: row.calendar_id,
+        googleEventId: row.google_event_id,
+        desiredAction: row.desired_action,
+        syncStatus: row.sync_status,
+        lastError: row.last_error,
+        content: row.payload ? hydrate(row) : null,
+      }));
+    },
+    async assignCalendarTarget(id: string, target: string) {
+      await pool.query(`UPDATE content_calendar_events SET calendar_id=$2,updated_at=now()
+        WHERE content_id=$1 AND calendar_id IS NULL`, [id, target]);
+      const result = await pool.query("SELECT calendar_id FROM content_calendar_events WHERE content_id=$1", [id]);
+      if (!result.rows[0]) throw new Error("Pekerjaan kalender tidak ditemukan.");
+      return result.rows[0].calendar_id as string;
+    },
+    async markCalendarSynced(id: string, action: "upsert" | "delete") {
+      if (action === "delete") {
+        await pool.query("DELETE FROM content_calendar_events WHERE content_id=$1", [id]);
+      } else {
+        await pool.query(`UPDATE content_calendar_events SET sync_status='synced',last_error=NULL,
+          last_synced_at=now(),updated_at=now() WHERE content_id=$1`, [id]);
+      }
+    },
+    async markCalendarFailed(id: string, message: string, retryable: boolean) {
+      await pool.query(`UPDATE content_calendar_events SET sync_status=$2,last_error=$3,updated_at=now()
+        WHERE content_id=$1`, [id, retryable ? "pending" : "failed", message.slice(0, 500)]);
     },
     async listAdministration(access: AccessContext) {
       requireAdmin(access);

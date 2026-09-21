@@ -15,6 +15,17 @@ export type CalendarContent = Content & {
   calendarSync: CalendarSyncSummary;
 };
 
+export type CalendarJob = {
+  contentId: string;
+  studyProgramId: string;
+  calendarId: string | null;
+  googleEventId: string;
+  desiredAction: "upsert" | "delete";
+  syncStatus: Exclude<CalendarSyncStatus, "disabled">;
+  lastError: string | null;
+  content: Content | null;
+};
+
 export type GoogleCalendarEvent = {
   id: string;
   summary: string;
