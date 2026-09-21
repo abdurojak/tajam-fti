@@ -21,7 +21,11 @@ function errorFor(status?: number) {
     return new CalendarSyncError("Kalender tim tidak ditemukan.", false, status);
   if (status === 429 || (status != null && status >= 500))
     return new CalendarSyncError("Google Calendar sedang sibuk. Coba sinkronkan lagi.", true, status);
-  return new CalendarSyncError("Google Calendar belum dapat disinkronkan.", true, status);
+  return new CalendarSyncError(
+    `Google Calendar belum dapat disinkronkan${status ? ` (HTTP ${status})` : ""}.`,
+    true,
+    status,
+  );
 }
 
 async function calendarResponseError(response: Response) {

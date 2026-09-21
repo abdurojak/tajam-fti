@@ -57,4 +57,11 @@ describe("Google Calendar client", () => {
         status: 400,
       });
   });
+  it("reports the HTTP code for other Google rejections", async () => {
+    const rejected = vi.fn()
+      .mockResolvedValueOnce(new Response("", { status: 404 }))
+      .mockResolvedValueOnce(new Response("", { status: 422 }));
+    await expect(createGoogleCalendarClient({ fetch: rejected }).upsertEvent("team", event, "token"))
+      .rejects.toMatchObject({ safeMessage: "Google Calendar belum dapat disinkronkan (HTTP 422)." });
+  });
 });
