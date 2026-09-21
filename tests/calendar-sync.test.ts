@@ -28,5 +28,28 @@ describe("Google Calendar event mapping", () => {
       },
     });
     expect(event.description).not.toContain(valid.uploadDate);
+    expect(event.reminders).toBeUndefined();
+  });
+  it("creates a timed Jakarta event and popup reminder", () => {
+    const event = buildCalendarEvent({
+      ...valid,
+      eventTime: "09:30",
+      reminderMinutes: "30",
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      createdAt: "2026-09-01T00:00:00.000Z",
+      updatedAt: "2026-09-01T00:00:00.000Z",
+    });
+    expect(event.start).toEqual({
+      dateTime: "2026-09-16T09:30:00+07:00",
+      timeZone: "Asia/Jakarta",
+    });
+    expect(event.end).toEqual({
+      dateTime: "2026-09-16T10:30:00+07:00",
+      timeZone: "Asia/Jakarta",
+    });
+    expect(event.reminders).toEqual({
+      useDefault: false,
+      overrides: [{ method: "popup", minutes: 30 }],
+    });
   });
 });

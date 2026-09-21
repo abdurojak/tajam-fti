@@ -23,7 +23,11 @@ describe("impor dan ekspor Excel", () => {
     const input = { ...valid, notes: "=SUM(1,2)" };
     const rows = await parseWorkbook(await createWorkbook([input]));
     expect(rows).toHaveLength(1);
-    expect(rows[0].data).toEqual(input);
+    expect(rows[0].data).toEqual({
+      ...input,
+      eventTime: "",
+      reminderMinutes: "",
+    });
     expect(rows[0].errors).toEqual({});
   });
   it("mengabaikan baris kosong dan mempertahankan nomor baris error", async () => {

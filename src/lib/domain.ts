@@ -54,7 +54,9 @@ export const FIELDS = [
   "notes",
 ] as const;
 export type Field = (typeof FIELDS)[number];
-export type ContentInput = Record<Field, string>;
+export type SchedulingField = "eventTime" | "reminderMinutes";
+export type ContentInput = Record<Field, string> &
+  Partial<Record<SchedulingField, string>>;
 export type Content = ContentInput & {
   id: string;
   createdAt: string;
@@ -87,6 +89,8 @@ export const EMPTY: ContentInput = {
   pic: "",
   link: "",
   notes: "",
+  eventTime: "",
+  reminderMinutes: "",
 };
 export function isDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -132,7 +136,13 @@ export function validateContent(input: unknown) {
       typeof source[key] === "string" ? (source[key] as string).trim() : "",
     ]),
   ) as ContentInput;
-  const errors: Partial<Record<Field, string>> = {};
+  data.eventTime =
+    typeof source.eventTime === "string" ? source.eventTime.trim() : "";
+  data.reminderMinutes =
+    typeof source.reminderMinutes === "string"
+      ? source.reminderMinutes.trim()
+      : "";
+  const errors: Partial<Record<Field | SchedulingField, string>> = {};
   const warnings: string[] = [];
   for (const field of FIELDS) {
     if (!["link", "notes"].includes(field) && !data[field])
@@ -155,6 +165,15 @@ export function validateContent(input: unknown) {
   for (const key of ["eventDate", "uploadDate"] as const)
     if (data[key] && !isDate(data[key]))
       errors[key] = "Tanggal tidak valid (1900–2200).";
+  if (data.eventTime && !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(data.eventTime))
+    errors.eventTime = "Gunakan jam 00:00–23:59.";
+  if (
+    data.reminderMinutes &&
+    !["0", "10", "30", "60"].includes(data.reminderMinutes)
+  )
+    errors.reminderMinutes = "Pilih pengingat yang tersedia.";
+  if (data.reminderMinutes && !data.eventTime)
+    errors.reminderMinutes = "Isi jam mulai untuk menggunakan pengingat.";
   if (data.link) {
     try {
       const url = new URL(data.link);
@@ -174,7 +193,13 @@ export function validateContent(input: unknown) {
   return { data, errors, warnings };
 }
 export function fingerprint(data: ContentInput) {
-  return JSON.stringify(FIELDS.map((key) => data[key].trim()));
+  const values: string[] = FIELDS.map((key) => data[key].trim());
+  if (data.eventTime || data.reminderMinutes)
+    values.push(
+      data.eventTime?.trim() ?? "",
+      data.reminderMinutes?.trim() ?? "",
+    );
+  return JSON.stringify(values);
 }
 export function today() {
   const d = new Date();

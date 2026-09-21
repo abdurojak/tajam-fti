@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { validateContent, toDateString } from "../src/lib/domain";
+import {
+  validateContent,
+  toDateString,
+  fingerprint,
+  FIELDS,
+} from "../src/lib/domain";
 import { valid } from "./fixtures";
 describe("aturan konten tanpa approval", () => {
   it("menerima tiga status yang disepakati", () => {
@@ -32,5 +37,39 @@ describe("aturan konten tanpa approval", () => {
     expect(toDateString(46281)).toBe("2026-09-16");
     expect(toDateString("16/09/2026")).toBe("2026-09-16");
     expect(toDateString("2026-02-30")).toBe("");
+  });
+  it("menerima jam dan pengingat opsional, serta memberi nilai kosong untuk data lama", () => {
+    expect(validateContent(valid).data).toMatchObject({
+      eventTime: "",
+      reminderMinutes: "",
+    });
+    const result = validateContent({
+      ...valid,
+      eventTime: "09:30",
+      reminderMinutes: "30",
+    });
+    expect(result.errors).toEqual({});
+    expect(result.data).toMatchObject({
+      eventTime: "09:30",
+      reminderMinutes: "30",
+    });
+  });
+  it("menolak jam/pengingat tidak valid dan pengingat tanpa jam", () => {
+    expect(
+      validateContent({ ...valid, eventTime: "25:00" }).errors.eventTime,
+    ).toBeTruthy();
+    expect(
+      validateContent({ ...valid, eventTime: "09:00", reminderMinutes: "15" })
+        .errors.reminderMinutes,
+    ).toBeTruthy();
+    expect(
+      validateContent({ ...valid, reminderMinutes: "30" }).errors
+        .reminderMinutes,
+    ).toBeTruthy();
+  });
+  it("mempertahankan sidik jari data lama tanpa jam agar impor duplikat tetap dikenali", () => {
+    expect(fingerprint(validateContent(valid).data)).toBe(
+      JSON.stringify(FIELDS.map((key) => valid[key].trim())),
+    );
   });
 });

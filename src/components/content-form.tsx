@@ -13,6 +13,7 @@ import {
   type Content,
   type ContentInput,
   type Field,
+  type SchedulingField,
 } from "@/lib/domain";
 import { Dialog, ExternalLink } from "./ui";
 export default function ContentForm({
@@ -32,7 +33,9 @@ export default function ContentForm({
       prodi: studyPrograms.length === 1 ? studyPrograms[0] : "",
     },
   );
-  const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<Field | SchedulingField, string>>
+  >({});
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const set = (field: Field, value: string) => {
@@ -149,6 +152,58 @@ export default function ContentForm({
           <div className="form-grid">
             {field("eventDate", undefined, "date")}
             {field("uploadDate", undefined, "date")}
+            <label className="field">
+              <span>Jam mulai (opsional)</span>
+              <input
+                type="time"
+                value={form.eventTime ?? ""}
+                aria-invalid={!!errors.eventTime}
+                onChange={(e) => {
+                  setForm((previous) => ({
+                    ...previous,
+                    eventTime: e.target.value,
+                    reminderMinutes: e.target.value
+                      ? previous.reminderMinutes
+                      : "",
+                  }));
+                  setErrors((previous) => ({
+                    ...previous,
+                    eventTime: undefined,
+                    reminderMinutes: undefined,
+                  }));
+                }}
+              />
+              {errors.eventTime && (
+                <small className="field-error">{errors.eventTime}</small>
+              )}
+            </label>
+            <label className="field">
+              <span>Pengingat Google Calendar (opsional)</span>
+              <select
+                value={form.reminderMinutes ?? ""}
+                disabled={!form.eventTime}
+                aria-invalid={!!errors.reminderMinutes}
+                onChange={(e) => {
+                  setForm((previous) => ({
+                    ...previous,
+                    reminderMinutes: e.target.value,
+                  }));
+                  setErrors((previous) => ({
+                    ...previous,
+                    reminderMinutes: undefined,
+                  }));
+                }}
+              >
+                <option value="">Ikuti pengaturan kalender</option>
+                <option value="0">Saat mulai</option>
+                <option value="10">10 menit sebelumnya</option>
+                <option value="30">30 menit sebelumnya</option>
+                <option value="60">1 jam sebelumnya</option>
+              </select>
+              {errors.reminderMinutes && (
+                <small className="field-error">{errors.reminderMinutes}</small>
+              )}
+            </label>
             {field("format", FORMATS)}
             {field("channel", CHANNELS)}
             {field("pic")}
