@@ -15,6 +15,8 @@ import {
   type Content,
 } from "@/lib/domain";
 import { Avatar, Empty, Status } from "./ui";
+import type { CalendarContent } from "@/lib/calendar-sync";
+import { calendarStatusLabel } from "@/lib/calendar-ui";
 export type Filters = {
   search: string;
   prodi: string;
@@ -148,12 +150,14 @@ export default function ContentTable({
   rows,
   onEdit,
   onDelete,
+  onCalendarRetry,
   compact = false,
   emptyAction,
 }: {
-  rows: Content[];
+  rows: (Content | CalendarContent)[];
   onEdit?: (r: Content) => void;
   onDelete?: (r: Content) => void;
+  onCalendarRetry?: (r: CalendarContent) => void;
   compact?: boolean;
   emptyAction?: React.ReactNode;
 }) {
@@ -208,6 +212,16 @@ export default function ContentTable({
               </td>
               <td>
                 <Status status={row.status} />
+                {"calendarSync" in row && row.calendarSync.status !== "disabled" && (
+                  <div className={`calendar-sync ${row.calendarSync.status}`} title={row.calendarSync.error ?? undefined}>
+                    <span>{calendarStatusLabel(row.calendarSync.status)}</span>
+                    {onCalendarRetry && row.calendarSync.status !== "synced" && (
+                      <button type="button" onClick={() => onCalendarRetry(row)}>
+                        Sinkronkan ulang
+                      </button>
+                    )}
+                  </div>
+                )}
               </td>
               {!compact && (
                 <td>
