@@ -55,8 +55,10 @@ export default function Guide({ cloud = false }: { cloud?: boolean }) {
           },
           {
             icon: CalendarDays,
-            title: "Satu kalender, dua tanggal",
-            text: "Acara ditandai biru, upload ditandai hijau. Ekspor .ics dapat diimpor manual ke Google Calendar. Sinkronisasi otomatis dan reminder Google belum terhubung; membutuhkan konfigurasi OAuth dan izin kalender.",
+            title: "Kalender internal dan kalender tim",
+            text: cloud
+              ? "Tanggal Acara otomatis dibuat sebagai agenda sepanjang hari di kalender Google tim. Edit memperbarui agenda yang sama; Batal atau hapus konten menghapus agenda. Jika status sinkronisasi gagal, pilih Sinkronkan ulang. Anggota perlu login ulang setelah izin Calendar diaktifkan."
+              : "Acara ditandai biru dan upload ditandai hijau. Ekspor .ics tetap tersedia untuk impor manual; mode lokal tidak terhubung ke Google Calendar.",
           },
           {
             icon: Database,

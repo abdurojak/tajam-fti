@@ -46,15 +46,16 @@ type ProgramRow = {
 };
 
 function hydrate(row: Row): CalendarContent {
+  const payload = row.payload;
   return {
-    ...row.payload,
+    ...payload,
     prodi: row.program_name,
     id: row.id,
     createdAt: row.created_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),
     calendarSync: {
-      status: row.sync_status ?? "failed",
-      error: row.last_error ?? (row.sync_status ? null : "Google Calendar belum dikonfigurasi."),
+      status: row.sync_status ?? (payload.status === "Batal" ? "synced" : "failed"),
+      error: row.last_error ?? (row.sync_status || payload.status === "Batal" ? null : "Google Calendar belum dikonfigurasi."),
     },
   };
 }
