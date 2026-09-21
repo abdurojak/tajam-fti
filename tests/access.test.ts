@@ -5,6 +5,8 @@ import {
   googleSignInAllowed,
   accessMode,
   authConfigurationReady,
+  calendarConfigurationReady,
+  googleAuthorizationParams,
 } from "../src/lib/access";
 import { mutationAllowed } from "../src/lib/api";
 afterEach(() => vi.unstubAllEnvs());
@@ -63,6 +65,26 @@ describe("cloud access", () => {
       authConfigurationReady({ ...env, NEXTAUTH_URL: "http://tajam.example" }),
     ).toBe(false);
     expect(authConfigurationReady(env)).toBe(true);
+  });
+  it("requests offline Calendar event access without making it an auth prerequisite", () => {
+    expect(googleAuthorizationParams()).toEqual({
+      scope:
+        "openid email profile https://www.googleapis.com/auth/calendar.events",
+      access_type: "offline",
+      prompt: "select_account consent",
+    });
+    const env = {
+      DATABASE_URL: "postgresql://example",
+      NEXTAUTH_URL: "https://tajam.example",
+      NEXTAUTH_SECRET: "x".repeat(40),
+      GOOGLE_CLIENT_ID: "id",
+      GOOGLE_CLIENT_SECRET: "secret",
+    };
+    expect(authConfigurationReady(env)).toBe(true);
+    expect(calendarConfigurationReady(env)).toBe(false);
+    expect(
+      calendarConfigurationReady({ ...env, GOOGLE_CALENDAR_ID: "team@group.calendar.google.com" }),
+    ).toBe(true);
   });
   it("checks the configured HTTPS origin behind a serverless proxy", () => {
     vi.stubEnv("NEXTAUTH_URL", "https://tajam.example");

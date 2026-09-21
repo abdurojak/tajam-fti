@@ -1,5 +1,13 @@
 import { isHosted } from "./runtime-config";
 type Environment = Record<string, string | undefined>;
+export function googleAuthorizationParams() {
+  return {
+    scope:
+      "openid email profile https://www.googleapis.com/auth/calendar.events",
+    access_type: "offline",
+    prompt: "select_account consent",
+  } as const;
+}
 export function accessMode(env: Environment = process.env): "local" | "google" {
   return isHosted(env) ||
     env.DATABASE_URL?.trim() ||
@@ -56,4 +64,12 @@ export function authConfigurationReady(env: Environment = process.env) {
   } catch {
     return false;
   }
+}
+
+export function calendarConfigurationReady(env: Environment = process.env) {
+  return (
+    authConfigurationReady(env) &&
+    !!env.DATABASE_URL?.trim() &&
+    !!env.GOOGLE_CALENDAR_ID?.trim()
+  );
 }
