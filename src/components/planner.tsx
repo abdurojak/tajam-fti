@@ -41,7 +41,7 @@ import { downloadBlob } from "@/lib/download";
 import { LogoutButton } from "./login-button";
 import type { AccessSummary } from "@/lib/organization";
 import type { CalendarContent } from "@/lib/calendar-sync";
-import { calendarBatchIds } from "@/lib/calendar-ui";
+import { calendarBatchIds, calendarRetryResult } from "@/lib/calendar-ui";
 import MemberManager from "./member-manager";
 import OrganizationManager from "./organization-manager";
 const NAV = [
@@ -215,9 +215,12 @@ export default function Planner({
   }
   async function retryCalendar(row: CalendarContent) {
     try {
-      await request("/api/calendar/sync", "POST", { ids: [row.id] });
+      const response = await request<{ synced: string[]; failed: { id: string; error: string | null }[] }>(
+        "/api/calendar/sync", "POST", { ids: [row.id] },
+      );
       await reload();
-      notify("Google Calendar berhasil disinkronkan.");
+      const outcome = calendarRetryResult(response, row.id);
+      notify(outcome.message, !outcome.ok);
     } catch (error) {
       notify(error instanceof Error ? error.message : "Sinkronisasi gagal.", true);
     }

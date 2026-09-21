@@ -24,6 +24,18 @@ function errorFor(status?: number) {
   return new CalendarSyncError("Google Calendar belum dapat disinkronkan.", true, status);
 }
 
+async function calendarResponseError(response: Response) {
+  if (response.status !== 400) return errorFor(response.status);
+  let reason: unknown;
+  try {
+    const data = await response.json() as { error?: { errors?: { reason?: unknown }[] } };
+    reason = data.error?.errors?.[0]?.reason;
+  } catch { /* The HTTP code remains useful when Google has no JSON body. */ }
+  const safeReason = typeof reason === "string" && /^[A-Za-z0-9_-]{1,60}$/.test(reason)
+    ? `; alasan: ${reason}` : "";
+  return new CalendarSyncError(`Google Calendar menolak agenda (HTTP 400${safeReason}).`, false, 400);
+}
+
 export async function refreshGoogleAccessToken(
   refreshToken: string,
   options: { clientId: string; clientSecret: string; fetch?: FetchLike },
@@ -94,7 +106,7 @@ export function createGoogleCalendarClient(options: {
           });
         }
       }
-      if (!response.ok) throw errorFor(response.status);
+      if (!response.ok) throw await calendarResponseError(response);
     },
     async deleteEvent(calendarId: string, eventId: string, token: string) {
       const response = await call(
