@@ -50,7 +50,7 @@ Untuk pengujian terisolasi, variabel `TAJAM_DB_PATH` dapat menunjuk file lain. J
 ## Batas versi ini
 
 - **Login Google tersedia untuk mode cloud** dan keanggotaan, role, serta cakupan jurusan/prodi dikelola Admin dari database. Mode lokal tanpa environment cloud tetap tanpa login, berperan sebagai Admin, dan hanya mendengarkan loopback.
-- **Google Calendar belum tersinkron otomatis.** Ekspor ICS adalah impor manual. Mengubah data aplikasi tidak otomatis mengubah acara yang sudah diimpor. OAuth, izin kalender, dan reminder Google merupakan tahap integrasi berikutnya.
+- **Google Calendar tim dapat tersinkron otomatis pada mode cloud.** Tanggal Acara dibuat sebagai agenda sepanjang hari; edit memperbarui agenda yang sama, sedangkan Batal/hapus menghapusnya. `GOOGLE_CALENDAR_ID`, Calendar API, scope OAuth, dan izin edit kalender bersama harus dikonfigurasi. Ekspor ICS tetap tersedia untuk kebutuhan manual.
 - Deployment Netlify wajib memakai `DATABASE_URL` PostgreSQL/Neon. Konfigurasi login yang belum lengkap menutup akses; tidak ada fallback SQLite di runtime serverless.
 
 ## Pemeriksaan

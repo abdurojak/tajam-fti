@@ -43,3 +43,16 @@ describe("organizational migration", () => {
     expect(sql).toContain("VALUES ('002-organizational-access.sql')");
   });
 });
+
+describe("Google Calendar migration", () => {
+  const sql = readFileSync("db/003-google-calendar-sync.sql", "utf8");
+
+  it("creates a durable sync tombstone without a content foreign key", () => {
+    expect(sql).toContain("CREATE TABLE IF NOT EXISTS content_calendar_events");
+    expect(sql).toContain("desired_action IN ('upsert','delete')");
+    expect(sql).toContain("sync_status IN ('pending','synced','failed')");
+    expect(sql).not.toMatch(/content_id[^,]+REFERENCES content/i);
+    expect(sql).toContain("content_calendar_sync_idx");
+    expect(sql).toContain("VALUES ('003-google-calendar-sync.sql')");
+  });
+});

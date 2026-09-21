@@ -50,8 +50,11 @@ Tambahkan environment berikut di dashboard Netlify. Terapkan untuk **Builds dan 
 | `NEXTAUTH_SECRET` | Nilai acak rahasia, minimal 32 karakter |
 | `GOOGLE_CLIENT_ID` | Client ID OAuth Google |
 | `GOOGLE_CLIENT_SECRET` | Client secret OAuth Google |
+| `GOOGLE_CALENDAR_ID` | ID kalender bersama TAJAM FTI |
 
 Buat secret lokal dengan `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`, lalu simpan hanya di environment. Jangan menggunakan nilai contoh sebagai secret asli. Jangan memberi awalan `NEXT_PUBLIC_` pada nilai di atas.
+
+Aktifkan **Google Calendar API** pada proyek Google Cloud yang sama. Tambahkan scope internal `https://www.googleapis.com/auth/calendar.events` pada consent screen. Buat kalender TAJAM bersama, bagikan kepada setiap anggota dengan izin **Make changes to events**, lalu salin Calendar ID dari pengaturan kalender ke `GOOGLE_CALENDAR_ID`. Setelah deployment, setiap anggota harus keluar lalu login kembali untuk menyetujui izin baru. Token Calendar hanya digunakan di server.
 
 Setelah mengubah environment, lakukan redeploy. Deploy preview sebaiknya memakai database dan OAuth client terpisah; jangan memberi production secrets pada PR dari kontributor yang tidak dipercaya. Tanpa konfigurasi lengkap, halaman login menampilkan pesan persiapan dan API menolak akses.
 
@@ -69,7 +72,7 @@ Mode lokal tanpa environment cloud tetap memakai `data/tajam.db`. Database ini t
 - Coba impor Excel, unduh Excel/PDF, dan ekspor kalender.
 - Masuk dari perangkat kedua dan muat ulang untuk melihat data tim yang sama.
 
-Sinkronisasi langsung antar-tab belum tersedia; muat ulang untuk mengambil perubahan anggota lain. Jika dua anggota mengedit baris sama, penyimpanan terakhir menjadi hasil akhir. Gmail reminder dan Google Calendar otomatis masih memerlukan integrasi terpisah. Batas penggunaan/biaya mengikuti paket akun Netlify dan Neon; kode ini tidak menjamin hosting gratis selamanya.
+Sinkronisasi langsung antar-tab belum tersedia; muat ulang untuk mengambil perubahan anggota lain. Jika dua anggota mengedit baris sama, penyimpanan terakhir menjadi hasil akhir. Google Calendar hanya menyinkronkan Tanggal Acara; Tanggal Upload tetap berada di kalender internal/ICS. Gmail reminder masih memerlukan integrasi terpisah. Batas penggunaan/biaya mengikuti paket akun Netlify dan Neon; kode ini tidak menjamin hosting gratis selamanya.
 
 ## Pengujian terisolasi
 

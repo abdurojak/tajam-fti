@@ -27,6 +27,7 @@ import {
   type Department,
   type StudyProgram,
 } from "./organization";
+import type { CalendarContent } from "./calendar-sync";
 
 export function createStore(path: string) {
   if (path !== ":memory:") mkdirSync(dirname(path), { recursive: true });
@@ -107,9 +108,10 @@ export function createStore(path: string) {
       allowedProgramIds: programIdsFor({ role: row.role, scopeType: row.scopeType, scopeId }, organization().studyPrograms),
     };
   };
-  const hydrate = (row: any): Content => ({
+  const hydrate = (row: any): CalendarContent => ({
     ...JSON.parse(row.payload), prodi: row.programName, id: row.id,
     createdAt: row.createdAt, updatedAt: row.updatedAt,
+    calendarSync: { status: "disabled", error: null },
   });
   const clean = (input: unknown) => {
     const result = validateContent(input);
@@ -140,7 +142,8 @@ export function createStore(path: string) {
     const time = new Date().toISOString();
     db.prepare("INSERT INTO content(id,payload,studyProgramId,createdAt,updatedAt) VALUES(?,?,?,?,?)")
       .run(id, JSON.stringify(data), program.id, time, time);
-    return { ...data, prodi: program.name, id, createdAt: time, updatedAt: time };
+    return { ...data, prodi: program.name, id, createdAt: time, updatedAt: time,
+      calendarSync: { status: "disabled" as const, error: null } };
   };
   const requireAdmin = (access: AccessContext) => {
     if (access.role !== "admin") throw new AuthorizationError();
@@ -205,14 +208,20 @@ export function createStore(path: string) {
         for (const row of rows) resolveProgram(row.prodi, access);
         const seen = new Set(list(access).map(fingerprint));
         let added = 0, skipped = 0;
+        const ids: string[] = [];
         for (const data of rows) {
           const value = fingerprint(data);
           if (seen.has(value)) { skipped++; continue; }
-          insert(data, access); seen.add(value); added++;
+          const row = insert(data, access); ids.push(row.id); seen.add(value); added++;
         }
-        return { added, skipped };
+        return { added, skipped, ids };
       })();
     },
+    async getCalendarJob() { return null; },
+    async listCalendarJobs() { return []; },
+    async assignCalendarTarget() { throw new Error("Google Calendar tidak aktif pada mode lokal."); },
+    async markCalendarSynced() {},
+    async markCalendarFailed() {},
     listAdministration(access: AccessContext) {
       requireAdmin(access);
       const members = db.prepare(`SELECT email,role,scopeType,departmentId,studyProgramId,active

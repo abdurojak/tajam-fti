@@ -40,6 +40,8 @@ import { Dialog } from "./ui";
 import { downloadBlob } from "@/lib/download";
 import { LogoutButton } from "./login-button";
 import type { AccessSummary } from "@/lib/organization";
+import type { CalendarContent } from "@/lib/calendar-sync";
+import { calendarBatchIds } from "@/lib/calendar-ui";
 import MemberManager from "./member-manager";
 import OrganizationManager from "./organization-manager";
 const NAV = [
@@ -107,7 +109,7 @@ export default function Planner({
   cloud?: boolean;
   access: AccessSummary;
 }) {
-  const [rows, setRows] = useState<Content[]>([]);
+  const [rows, setRows] = useState<CalendarContent[]>([]);
   const [page, setPage] = useState("dashboard");
   const [filters, setFilters] = useState<Filters>({ ...DEFAULT_FILTERS });
   const [form, setForm] = useState<Content | null | undefined>(undefined);
@@ -130,7 +132,7 @@ export default function Planner({
     : NAV;
   async function reload() {
     try {
-      const data = await request<Content[]>("/api/content");
+      const data = await request<CalendarContent[]>("/api/content");
       setRows(data);
       setLoadError("");
     } catch (err) {
@@ -168,7 +170,7 @@ export default function Planner({
     a.uploadDate.localeCompare(b.uploadDate),
   );
   async function save(data: ContentInput, id?: string) {
-    const saved = await request<Content>(
+    const saved = await request<CalendarContent>(
       id ? `/api/content/${id}` : "/api/content",
       id ? "PUT" : "POST",
       data,
@@ -177,23 +179,48 @@ export default function Planner({
       saved,
       ...previous.filter((row) => row.id !== saved.id),
     ]);
+    const baseMessage = id
+      ? "Perubahan konten tersimpan."
+      : "Rencana konten berhasil ditambahkan.";
     notify(
-      id
-        ? "Perubahan konten tersimpan."
-        : "Rencana konten berhasil ditambahkan.",
+      saved.calendarSync.status === "failed"
+        ? `${baseMessage} Kalender belum tersinkron: ${saved.calendarSync.error}`
+        : baseMessage,
+      saved.calendarSync.status === "failed",
     );
   }
   async function importRows(data: ContentInput[]) {
-    const result = await request<{ added: number; skipped: number }>(
+    const result = await request<{ added: number; skipped: number; ids: string[] }>(
       "/api/import",
       "POST",
       data,
     );
+    let calendarFailures = 0;
+    if (cloud) {
+      for (const batch of calendarBatchIds(result.ids)) {
+        try {
+          const synced = await request<{ failed: unknown[] }>("/api/calendar/sync", "POST", { ids: batch });
+          calendarFailures += synced.failed.length;
+        } catch {
+          calendarFailures += batch.length;
+        }
+      }
+    }
     // The import has committed; a refresh failure must not invite a repeat save.
     await reload().catch(() => {});
     notify(
-      `${result.added} konten ditambahkan${result.skipped ? `, ${result.skipped} duplikat dilewati` : ""}.`,
+      `${result.added} konten ditambahkan${result.skipped ? `, ${result.skipped} duplikat dilewati` : ""}${calendarFailures ? `; ${calendarFailures} agenda perlu disinkronkan ulang` : ""}.`,
+      calendarFailures > 0,
     );
+  }
+  async function retryCalendar(row: CalendarContent) {
+    try {
+      await request("/api/calendar/sync", "POST", { ids: [row.id] });
+      await reload();
+      notify("Google Calendar berhasil disinkronkan.");
+    } catch (error) {
+      notify(error instanceof Error ? error.message : "Sinkronisasi gagal.", true);
+    }
   }
   async function sample() {
     setBusy(true);
@@ -451,6 +478,7 @@ export default function Planner({
                         rows={filtered}
                         onEdit={canWrite ? setForm : undefined}
                         onDelete={canWrite ? setDeleting : undefined}
+                        onCalendarRetry={canWrite && cloud ? retryCalendar : undefined}
                         emptyAction={
                           canWrite && page === "content" ? (
                             <button

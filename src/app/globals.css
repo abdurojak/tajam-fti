@@ -1524,6 +1524,13 @@ textarea {
   background: currentColor;
   margin: 0 5px 2px 0;
 }
+
+.calendar-sync { display: flex; align-items: center; gap: .4rem; margin-top: .4rem; font-size: .72rem; }
+.calendar-sync span { padding: .16rem .45rem; border-radius: 999px; background: #eef2f7; color: #52606d; }
+.calendar-sync.synced span { background: #e5f6ed; color: #147a45; }
+.calendar-sync.failed span { background: #fdeaea; color: #b42318; }
+.calendar-sync.pending span { background: #fff3d6; color: #9a6700; }
+.calendar-sync button { border: 0; background: transparent; color: var(--accent); padding: 0; text-decoration: underline; cursor: pointer; font: inherit; }
 .calendar-panel .panel-foot {
   justify-content: flex-start;
 }

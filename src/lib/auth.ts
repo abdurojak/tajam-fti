@@ -1,9 +1,13 @@
 import { getServerSession, type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
-import { accessMode, authConfigurationReady, googleSignInAllowed } from "./access";
+import { accessMode, authConfigurationReady, googleAuthorizationParams, googleSignInAllowed } from "./access";
 import { getDatabase } from "./database";
 import { localAdminAccess, normalizeEmail, type AccessContext } from "./organization";
+import { refreshGoogleAccessToken } from "./google-calendar";
+
+export type CalendarCredentials = { accessToken: string };
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -11,7 +15,7 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
-      authorization: { params: { scope: "openid email profile", prompt: "select_account" } },
+      authorization: { params: googleAuthorizationParams() },
     }),
   ],
   session: { strategy: "jwt", maxAge: 8 * 60 * 60 },
@@ -26,6 +30,9 @@ export const authOptions: NextAuthOptions = {
       if (account) {
         token.teamVerified = googleSignInAllowed(account.provider, profile);
         token.email = typeof profile?.email === "string" ? normalizeEmail(profile.email) : undefined;
+        token.googleAccessToken = account.access_token;
+        token.googleRefreshToken = account.refresh_token ?? token.googleRefreshToken;
+        token.googleAccessTokenExpiresAt = account.expires_at;
       }
       return token;
     },
@@ -79,4 +86,34 @@ export async function requireAccess(level: "read" | "write" | "admin") {
 export async function requireMember() {
   const result = await requireAccess("read");
   return "response" in result ? result.response : null;
+}
+
+export async function calendarCredentials(
+  request: Request,
+): Promise<{ credentials: CalendarCredentials } | { error: string }> {
+  const token = await getToken({
+    req: request as never,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+  if (!token?.googleAccessToken)
+    return { error: "Izin Google Calendar belum diberikan. Silakan keluar lalu masuk kembali." };
+  const expiresAt = token.googleAccessTokenExpiresAt ?? 0;
+  if (expiresAt > Math.floor(Date.now() / 1000) + 60)
+    return { credentials: { accessToken: token.googleAccessToken } };
+  if (!token.googleRefreshToken)
+    return { error: "Izin Google Calendar berakhir. Silakan keluar lalu masuk kembali." };
+  try {
+    const refreshed = await refreshGoogleAccessToken(token.googleRefreshToken, {
+      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+    });
+    return { credentials: { accessToken: refreshed.accessToken } };
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Izin Google Calendar berakhir. Silakan keluar lalu masuk kembali.",
+    };
+  }
 }
