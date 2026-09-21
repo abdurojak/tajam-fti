@@ -303,7 +303,7 @@ export function createPostgresStore(pool: Pool) {
       if (!ids.length) return [];
       const allowed = access.allowedProgramIds;
       const result = await pool.query<any>(
-        `SELECT ce.*,c.payload,p.name AS program_name,c.created_at,c.updated_at
+        `SELECT ce.*,c.id,c.payload,p.name AS program_name,c.created_at,c.updated_at
          FROM content_calendar_events ce
          LEFT JOIN content c ON c.id=ce.content_id
          LEFT JOIN study_programs p ON p.id=c.study_program_id

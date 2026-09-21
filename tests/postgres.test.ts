@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { Pool } from "pg";
 import { valid } from "./fixtures";
 import { localAdminAccess } from "../src/lib/organization";
+import { buildCalendarEvent } from "../src/lib/calendar-sync";
 const admin = localAdminAccess();
 
 // Dedicated disposable DB only. Never falls back to the application's DATABASE_URL.
@@ -31,7 +32,10 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)(
         contentId: created.id,
         desiredAction: "upsert",
         syncStatus: "pending",
+        content: { id: created.id, eventDate: valid.eventDate },
       });
+      const job = await store.getCalendarJob(created.id, admin);
+      expect(buildCalendarEvent(job!.content!).id).toBe(job!.googleEventId);
       await store.update(created.id, { ...valid, status: "Batal" }, admin);
       expect(await store.getCalendarJob(created.id, admin)).toMatchObject({
         desiredAction: "delete",
