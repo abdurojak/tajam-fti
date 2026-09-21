@@ -43,4 +43,18 @@ describe("Google Calendar client", () => {
     await expect(createGoogleCalendarClient({ fetch: denied }).upsertEvent("team", event, "token"))
       .rejects.toMatchObject({ retryable: false } satisfies Partial<CalendarSyncError>);
   });
+
+  it("reports a safe HTTP code and Google reason for rejected events", async () => {
+    const rejected = vi.fn()
+      .mockResolvedValueOnce(new Response("", { status: 404 }))
+      .mockResolvedValueOnce(Response.json({ error: {
+        message: "private diagnostic text",
+        errors: [{ reason: "invalid" }],
+      } }, { status: 400 }));
+    await expect(createGoogleCalendarClient({ fetch: rejected }).upsertEvent("team", event, "token"))
+      .rejects.toMatchObject({
+        safeMessage: "Google Calendar menolak agenda (HTTP 400; alasan: invalid).",
+        status: 400,
+      });
+  });
 });
