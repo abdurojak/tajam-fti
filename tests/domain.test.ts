@@ -4,6 +4,7 @@ import {
   toDateString,
   fingerprint,
   FIELDS,
+  parseFormats,
 } from "../src/lib/domain";
 import { valid } from "./fixtures";
 describe("aturan konten tanpa approval", () => {
@@ -71,5 +72,25 @@ describe("aturan konten tanpa approval", () => {
     expect(fingerprint(validateContent(valid).data)).toBe(
       JSON.stringify(FIELDS.map((key) => valid[key].trim())),
     );
+  });
+  it("menerima dan menormalkan beberapa format", () => {
+    expect(parseFormats(" reels, Story, REELS ")).toEqual({
+      formats: ["Reels", "Story"],
+      invalid: [],
+    });
+    const result = validateContent({
+      ...valid,
+      format: " reels, Story, REELS ",
+    });
+    expect(result.errors).toEqual({});
+    expect(result.data.format).toBe("Reels, Story");
+  });
+  it("menolak satu atau beberapa format yang tidak tersedia", () => {
+    const result = validateContent({
+      ...valid,
+      format: "Reels, Podcast, Newsletter",
+    });
+    expect(result.errors.format).toContain("Podcast");
+    expect(result.errors.format).toContain("Newsletter");
   });
 });

@@ -175,7 +175,18 @@ export async function createWorkbook(
   ref.columns.forEach((c) => (c.width = 24));
   const targetColumns = [1, 4, 5, 8, 9];
   for (let i = 0; i < enums.length; i++)
-    for (let r = 2; r <= Math.max(201, rows.length + 1); r++)
+    for (let r = 2; r <= Math.max(201, rows.length + 1); r++) {
+      if (targetColumns[i] === 8) {
+        sheet.getCell(r, 8).dataValidation = {
+          type: "custom",
+          allowBlank: true,
+          formulae: ["TRUE"],
+          showInputMessage: true,
+          promptTitle: "Satu atau beberapa format",
+          prompt: "Pisahkan beberapa format dengan koma, contoh: Reels, Story.",
+        };
+        continue;
+      }
       sheet.getCell(r, targetColumns[i]).dataValidation = {
         type: "list",
         allowBlank: true,
@@ -185,6 +196,7 @@ export async function createWorkbook(
         showErrorMessage: true,
         error: "Pilih nilai dari daftar.",
       };
+    }
   const guide = workbook.addWorksheet("Panduan");
   guide.getColumn(1).width = 110;
   [
@@ -192,6 +204,7 @@ export async function createWorkbook(
     "Satu baris = satu rencana konten. Jangan mengubah header.",
     "Status: Draf (direncanakan/dikerjakan), Terbit (dipublikasikan), Batal (tidak dilanjutkan).",
     "Tanggal menggunakan YYYY-MM-DD. Tanggal acara dan upload sama menghasilkan peringatan.",
+    "Format boleh lebih dari satu. Pisahkan dengan koma sesuai sheet Referensi, contoh: Reels, Story.",
     "Semua kolom wajib kecuali Link Publikasi dan Catatan. Formula tidak didukung saat impor.",
   ].forEach((text) => guide.addRow([text]));
   return workbook.xlsx.writeBuffer();

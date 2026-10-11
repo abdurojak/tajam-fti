@@ -30,6 +30,21 @@ describe("impor dan ekspor Excel", () => {
     });
     expect(rows[0].errors).toEqual({});
   });
+  it("melakukan round-trip beberapa format dalam satu sel", async () => {
+    const input = { ...valid, format: "Reels, Story" };
+    const rows = await parseWorkbook(await createWorkbook([input]));
+    expect(rows[0].errors).toEqual({});
+    expect(rows[0].data.format).toBe("Reels, Story");
+  });
+  it("memberi petunjuk format jamak tanpa dropdown satu pilihan", async () => {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load((await createWorkbook()) as ExcelJS.Buffer);
+    const validation = workbook
+      .getWorksheet("Template Import")
+      ?.getCell("H2").dataValidation;
+    expect(validation?.type).toBe("custom");
+    expect(validation?.prompt).toContain("koma");
+  });
   it("mengabaikan baris kosong dan mempertahankan nomor baris error", async () => {
     const w = new ExcelJS.Workbook();
     const s = w.addWorksheet("Template Import");

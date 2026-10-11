@@ -31,6 +31,24 @@ export const FORMATS = [
   "Video Recap",
   "Artikel/Website",
 ] as const;
+
+export function parseFormats(value: string) {
+  const approved = new Map(
+    FORMATS.map((format) => [format.toLocaleLowerCase("id-ID"), format]),
+  );
+  const formats: string[] = [];
+  const invalid: string[] = [];
+  for (const item of value
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean)) {
+    const canonical = approved.get(item.toLocaleLowerCase("id-ID"));
+    if (!canonical) {
+      if (!invalid.includes(item)) invalid.push(item);
+    } else if (!formats.includes(canonical)) formats.push(canonical);
+  }
+  return { formats, invalid };
+}
 export const CHANNELS = [
   "Instagram",
   "TikTok",
@@ -156,12 +174,15 @@ export function validateContent(input: unknown) {
   const enums: Partial<Record<Field, readonly string[]>> = {
     category: CATEGORIES,
     status: STATUSES,
-    format: FORMATS,
     channel: CHANNELS,
   };
   for (const [key, options] of Object.entries(enums))
     if (data[key as Field] && !options.includes(data[key as Field]))
       errors[key as Field] = `Pilih ${LABELS[key as Field]} yang tersedia.`;
+  const parsedFormats = parseFormats(data.format);
+  data.format = parsedFormats.formats.join(", ");
+  if (parsedFormats.invalid.length)
+    errors.format = `Format tidak tersedia: ${parsedFormats.invalid.join(", ")}.`;
   for (const key of ["eventDate", "uploadDate"] as const)
     if (data[key] && !isDate(data[key]))
       errors[key] = "Tanggal tidak valid (1900–2200).";

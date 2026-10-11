@@ -9,6 +9,7 @@ import {
   LABELS,
   PRODI,
   STATUSES,
+  parseFormats,
   validateContent,
   type Content,
   type ContentInput,
@@ -38,9 +39,16 @@ export default function ContentForm({
   >({});
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const selectedFormats = parseFormats(form.format).formats;
   const set = (field: Field, value: string) => {
     setForm((previous) => ({ ...previous, [field]: value }));
     setErrors((previous) => ({ ...previous, [field]: undefined }));
+  };
+  const toggleFormat = (format: string, checked: boolean) => {
+    const next = checked
+      ? [...selectedFormats, format]
+      : selectedFormats.filter((item) => item !== format);
+    set("format", next.join(", "));
   };
   const field = (key: Field, options?: readonly string[], type = "text") => (
     <label
@@ -204,7 +212,31 @@ export default function ContentForm({
                 <small className="field-error">{errors.reminderMinutes}</small>
               )}
             </label>
-            {field("format", FORMATS)}
+            <fieldset className="field span-2 format-field">
+              <legend>
+                Format <b>*</b>
+              </legend>
+              <div className="format-options" aria-invalid={!!errors.format}>
+                {FORMATS.map((format) => (
+                  <label className="format-option" key={format}>
+                    <input
+                      type="checkbox"
+                      checked={selectedFormats.includes(format)}
+                      onChange={(event) =>
+                        toggleFormat(format, event.target.checked)
+                      }
+                    />
+                    <span>{format}</span>
+                  </label>
+                ))}
+              </div>
+              <small className="format-help">
+                Pilih satu atau beberapa format.
+              </small>
+              {errors.format && (
+                <small className="field-error">{errors.format}</small>
+              )}
+            </fieldset>
             {field("channel", CHANNELS)}
             {field("pic")}
             {field("status", STATUSES)}

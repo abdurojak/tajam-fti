@@ -1876,6 +1876,37 @@ textarea {
   color: #b36d5a;
   font-size: 10px;
 }
+.format-field { margin: 0; padding: 0; border: 0; }
+.format-field legend { padding: 0; }
+.format-field legend b { color: #a1ae8c; font-weight: 400; }
+.format-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #dfe5d9;
+  border-radius: 5px;
+  background: #fff;
+}
+.format-options[aria-invalid="true"] { border-color: #cb9c8d; }
+.format-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border-radius: 4px;
+  color: #566a46;
+  cursor: pointer;
+}
+.format-option:hover { background: #f4f7f1; }
+.format-option input {
+  width: 15px;
+  min-height: 15px;
+  margin: 0;
+  padding: 0;
+  accent-color: #566a46;
+}
+.format-help { color: #99a58b; font-size: 10px; }
 .span-2 {
   grid-column: span 2;
 }
