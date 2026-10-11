@@ -110,7 +110,9 @@ export default function Calendar({
           <i className="status-dot status-batal" />
           Batal
         </span>
-        <small>● Acara · ○ Upload · Ekspor .ics tidak menyertakan konten Batal.</small>
+        <span className="calendar-type-sample event">Acara</span>
+        <span className="calendar-type-sample upload">Upload</span>
+        <small>Warna menunjukkan status. Ekspor .ics tidak menyertakan konten Batal.</small>
       </div>
       <div className="calendar-scroll">
         <div className="calendar-grid">
@@ -146,8 +148,10 @@ export default function Calendar({
                     onClick={() => onEdit?.(event.row)}
                     disabled={!onEdit}
                   >
-                    <i />
-                    {event.row.idea}
+                    <span className="calendar-kind">
+                      {event.type === "event" ? "Acara" : "Upload"}
+                    </span>
+                    <span className="calendar-event-title">{event.row.idea}</span>
                   </button>
                 ))}
               </div>
