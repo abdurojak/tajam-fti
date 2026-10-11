@@ -1435,12 +1435,9 @@ textarea {
   height: 6px;
   border-radius: 50%;
 }
-.event-dot {
-  background: #819fc5;
-}
-.upload-dot {
-  background: #87aa59;
-}
+.calendar-legend .status-dot.status-draf { background: #c59b45; }
+.calendar-legend .status-dot.status-terbit { background: #72a45a; }
+.calendar-legend .status-dot.status-batal { background: #bd7468; }
 .calendar-legend small {
   font-size: 10px;
   margin-left: auto;
@@ -1508,14 +1505,9 @@ textarea {
   margin-bottom: 4px;
   line-height: 1.5;
 }
-.calendar-event.event {
-  background: #edf2f9;
-  color: #6983a6;
-}
-.calendar-event.upload {
-  background: #f0f5e5;
-  color: #7d955e;
-}
+.calendar-event.status-draf { background: #fbf3df; color: #96732e; }
+.calendar-event.status-terbit { background: #edf6e8; color: #5f884b; }
+.calendar-event.status-batal { background: #f8eae7; color: #a45f55; opacity: .78; }
 .calendar-event i {
   display: inline-block;
   width: 3px;
@@ -1876,6 +1868,7 @@ textarea {
   color: #b36d5a;
   font-size: 10px;
 }
+.calendar-event.upload i { background: transparent; border: 1px solid currentColor; }
 .format-field { margin: 0; padding: 0; border: 0; }
 .format-field legend { padding: 0; }
 .format-field legend b { color: #a1ae8c; font-weight: 400; }

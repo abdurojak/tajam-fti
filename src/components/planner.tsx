@@ -163,7 +163,7 @@ export default function Planner({
   const base =
     page === "archive"
       ? rows.filter((r) => r.status === "Batal")
-      : page === "report"
+      : page === "report" || page === "calendar"
         ? rows
         : active;
   const filtered = filterRows(base, filters).sort((a, b) =>
@@ -513,7 +513,8 @@ export default function Planner({
                         <FilterBar
                           filters={filters}
                           setFilters={setFilters}
-                          rows={active}
+                          rows={rows}
+                          allStatuses
                         />
                       </div>
                       <Calendar rows={filtered} onEdit={canWrite ? setForm : undefined} />

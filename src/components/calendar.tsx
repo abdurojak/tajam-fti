@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { type Content, today, dateLabel } from "@/lib/domain";
 import { downloadICS } from "@/lib/download";
+import { calendarStatusClass } from "@/lib/calendar-ui";
 export default function Calendar({
   rows,
   onEdit,
@@ -38,8 +39,11 @@ export default function Calendar({
       `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`,
     );
   };
-  const active = rows.filter((r) => r.status !== "Batal");
-  const monthRows = active.filter(
+  const exportable = rows.filter((r) => r.status !== "Batal");
+  const monthRows = rows.filter(
+    (r) => r.eventDate.startsWith(month) || r.uploadDate.startsWith(month),
+  );
+  const exportRows = exportable.filter(
     (r) => r.eventDate.startsWith(month) || r.uploadDate.startsWith(month),
   );
   return (
@@ -85,8 +89,8 @@ export default function Calendar({
           </select>
           <button
             className="button secondary small"
-            disabled={!monthRows.length}
-            onClick={() => downloadICS(monthRows, { kind, month })}
+            disabled={!exportRows.length}
+            onClick={() => downloadICS(exportRows, { kind, month })}
           >
             <Download size={15} />
             Ekspor .ics
@@ -95,14 +99,18 @@ export default function Calendar({
       </div>
       <div className="calendar-legend">
         <span>
-          <i className="event-dot" />
-          Tanggal acara
+          <i className="status-dot status-draf" />
+          Draf
         </span>
         <span>
-          <i className="upload-dot" />
-          Tanggal upload
+          <i className="status-dot status-terbit" />
+          Terbit
         </span>
-        <small>Ekspor .ics untuk impor manual ke Google Calendar.</small>
+        <span>
+          <i className="status-dot status-batal" />
+          Batal
+        </span>
+        <small>● Acara · ○ Upload · Ekspor .ics tidak menyertakan konten Batal.</small>
       </div>
       <div className="calendar-scroll">
         <div className="calendar-grid">
@@ -112,7 +120,7 @@ export default function Calendar({
             </div>
           ))}
           {cells.map((cell) => {
-            const events = active.flatMap((row) => [
+            const events = rows.flatMap((row) => [
               ...(row.eventDate === cell.key && kind !== "upload"
                 ? [{ row, type: "event" }]
                 : []),
@@ -133,8 +141,8 @@ export default function Calendar({
                 {events.map((event) => (
                   <button
                     key={event.row.id + event.type}
-                    className={`calendar-event ${event.type}`}
-                    title={`${event.type === "event" ? "Acara" : "Upload"}: ${event.row.idea}`}
+                    className={`calendar-event ${event.type} ${calendarStatusClass(event.row.status)}`}
+                    title={`${event.row.status} · ${event.type === "event" ? "Acara" : "Upload"}: ${event.row.idea}`}
                     onClick={() => onEdit?.(event.row)}
                     disabled={!onEdit}
                   >

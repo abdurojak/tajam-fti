@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { calendarBatchIds, calendarRetryResult, calendarStatusLabel } from "../src/lib/calendar-ui";
+import {
+  calendarBatchIds,
+  calendarRetryResult,
+  calendarStatusClass,
+  calendarStatusLabel,
+} from "../src/lib/calendar-ui";
 
 describe("calendar UI helpers", () => {
+  it("memetakan status konten ke kelas warna kalender", () => {
+    expect(calendarStatusClass("Draf")).toBe("status-draf");
+    expect(calendarStatusClass("Terbit")).toBe("status-terbit");
+    expect(calendarStatusClass("Batal")).toBe("status-batal");
+  });
   it("labels synchronization states", () => {
     expect(calendarStatusLabel("synced")).toBe("Tersinkron");
     expect(calendarStatusLabel("pending")).toBe("Menunggu");

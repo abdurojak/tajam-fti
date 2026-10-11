@@ -1,5 +1,9 @@
 import type { CalendarSyncStatus } from "./calendar-sync";
 
+export function calendarStatusClass(status: string) {
+  return `status-${status.toLocaleLowerCase("id-ID")}`;
+}
+
 export function calendarStatusLabel(status: CalendarSyncStatus) {
   return {
     synced: "Tersinkron",
