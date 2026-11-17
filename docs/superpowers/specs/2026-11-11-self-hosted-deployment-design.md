@@ -2,7 +2,7 @@
 
 ## Goal
 
-Move the current TAJAM FTI production data from Neon to a PostgreSQL instance on `103.28.161.35`, then run TAJAM as an isolated application at `https://lab1.trisakti.ac.id/tajam-fti/` without disrupting LabHub, Siklusa, or the other workloads on the host.
+Move the current TAJAM FTI production data from Neon to a PostgreSQL instance on the FTI production host, then run TAJAM as an isolated application at `https://lab1.trisakti.ac.id/tajam-fti/` without disrupting LabHub, Siklusa, or the other workloads on the host.
 
 ## Current host and application facts
 

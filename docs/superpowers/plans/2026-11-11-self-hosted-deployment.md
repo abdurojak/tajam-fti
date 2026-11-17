@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Run TAJAM FTI with its existing Neon data at `https://lab1.trisakti.ac.id/tajam-fti/` in an isolated Docker Compose stack on `103.28.161.35`.
+**Goal:** Run TAJAM FTI with its existing Neon data at `https://lab1.trisakti.ac.id/tajam-fti/` in an isolated Docker Compose stack on the FTI production host.
 
 **Architecture:** Add build-time Next.js base-path support and route every internal browser/auth URL through one helper. Deploy a commit-pinned standalone Next.js image and a private PostgreSQL 17 service under `/srv/tajam`, then add one scoped Apache proxy route after direct loopback verification. Keep Netlify and Neon unchanged as rollback sources.
 
