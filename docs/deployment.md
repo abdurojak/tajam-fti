@@ -1,5 +1,13 @@
 # Deploy TAJAM FTI ke Netlify + Neon
 
+## Database server FTI melalui SSH
+
+Produksi Netlify dapat memakai database yang sama dengan Lab1 melalui `src/lib/database-tunnel.ts`. Tetapkan `DATABASE_URL` milik role terbatas `tajam_netlify`, `DB_SSH_HOST`, `DB_SSH_TARGET`, `DB_SSH_KEY_BASE64`, dan `DB_SSH_HOST_SHA256` sebagai rahasia khusus konteks production. Hash host adalah SHA-256 heksadesimal dari public key SSH server (bukan teks fingerprint base64). Akun `tajam-netlify` hanya boleh meneruskan koneksi ke alamat container PostgreSQL port 5432; shell ditolak. PostgreSQL tidak memerlukan port publik.
+
+Kredensial disimpan di `/srv/tajam/shared/netlify-database.env` dan cadangan lokal direktori `.labhub-production`, tidak dalam Git. Jika container database dibuat ulang dan IP berubah, perbarui `DB_SSH_TARGET` serta `permitopen` authorized_keys bersamaan. `scripts/prepare-netlify-tunnel.sh` menyiapkan akun dan hak akses; jalankan hanya sebagai root pada server TAJAM setelah public key khusus tersedia di `/root/tajam-netlify.pub`. Jangan memakai key root untuk Netlify.
+
+Banner hijau hanya aktif ketika `NETLIFY=true`. Server Lab1 tetap memakai koneksi langsung internal. Sebelum beralih, uji pembacaan melalui tunnel; setelah deploy, periksa login dan akses API terautentikasi. Build dan unit test tidak membuktikan konektivitas dari lingkungan Netlify.
+
 Kode publik tidak berarti data aplikasi publik. Database, daftar anggota, dan kredensial tetap berada di environment server. Admin dapat melihat seluruh FTI; Editor dan Viewer hanya dapat mengakses prodi yang berada dalam cakupannya.
 
 ## 1. Siapkan Neon

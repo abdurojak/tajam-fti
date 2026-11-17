@@ -5,6 +5,16 @@
 @import "@fontsource/manrope/600.css";
 @import "@fontsource/manrope/700.css";
 
+.migration-announcement { display:flex; align-items:center; gap:20px; padding:22px 32px; background:linear-gradient(115deg,#1e3028,#356344 65%,#27756a); color:#fff; font-family:"DM Sans",Arial,sans-serif; }
+.migration-symbol { display:grid; place-items:center; flex:0 0 48px; height:48px; border-radius:14px; background:#ffffff18; color:#d4ef83; font-size:28px; }
+.migration-copy { flex:1; }
+.migration-copy > span { display:block; color:#d4ef83; font-size:11px; letter-spacing:.12em; font-weight:600; }
+.migration-copy strong { display:block; margin-top:5px; font-family:"Manrope",Arial,sans-serif; font-size:20px; }
+.migration-copy p { margin:5px 0 0; color:#e0ece1; font-size:13px; }
+.migration-announcement > a { display:flex; align-items:center; gap:12px; padding:13px 18px; border-radius:12px; background:#d4ef83; color:#1e3028; font-size:14px; font-weight:600; text-decoration:none; white-space:nowrap; }
+.migration-announcement > a:hover { background:#e1f5ae; }
+.migration-announcement > a:focus-visible { outline:3px solid white; outline-offset:4px; }
+@media(max-width:640px) { .migration-announcement { flex-wrap:wrap; padding:18px; gap:12px; } .migration-copy { flex-basis:calc(100% - 60px); } .migration-copy strong { font-size:17px; } .migration-announcement > a { margin-left:60px; white-space:normal; } }
 :root {
   --ink: #26392e;
   --muted: #81877f;

@@ -12,7 +12,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body>{children}</body>
+      <body>
+        {process.env.NETLIFY === "true" && (
+          <aside className="migration-announcement" aria-label="Pengumuman alamat baru TAJAM">
+            <div className="migration-symbol" aria-hidden="true">↗</div>
+            <div className="migration-copy">
+              <span>TAJAM PINDAH KE SERVER FTI</span>
+              <strong>Akses TAJAM melalui alamat baru</strong>
+              <p>Gunakan server Lab1 untuk melanjutkan perencanaan konten tim.</p>
+            </div>
+            <a href="https://lab1.trisakti.ac.id/tajam-fti">Buka TAJAM Baru <span aria-hidden="true">↗</span></a>
+          </aside>
+        )}
+        {children}
+      </body>
     </html>
   );
 }
