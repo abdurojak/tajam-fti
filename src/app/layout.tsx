@@ -17,7 +17,7 @@ export default function RootLayout({
           <aside className="migration-announcement" aria-label="Pengumuman alamat baru TAJAM">
             <div className="migration-symbol" aria-hidden="true">↗</div>
             <div className="migration-copy">
-              <span>TAJAM PINDAH KE SERVER FTI</span>
+              <span>TAJAM PINDAH KE SERVER TRISAKTI</span>
               <strong>Akses TAJAM melalui alamat baru</strong>
               <p>Gunakan server Lab1 untuk melanjutkan perencanaan konten tim.</p>
             </div>
