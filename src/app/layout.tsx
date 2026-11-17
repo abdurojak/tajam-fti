@@ -13,7 +13,7 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body>
-        {process.env.NETLIFY === "true" && (
+        {process.env.NEXT_PUBLIC_TAJAM_MIGRATION_BANNER === "true" && (
           <aside className="migration-announcement" aria-label="Pengumuman alamat baru TAJAM">
             <div className="migration-symbol" aria-hidden="true">↗</div>
             <div className="migration-copy">

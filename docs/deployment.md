@@ -6,7 +6,7 @@ Produksi Netlify dapat memakai database yang sama dengan Lab1 melalui `src/lib/d
 
 Kredensial disimpan di `/srv/tajam/shared/netlify-database.env` dan cadangan lokal direktori `.labhub-production`, tidak dalam Git. Jika container database dibuat ulang dan IP berubah, perbarui `DB_SSH_TARGET` serta `permitopen` authorized_keys bersamaan. `scripts/prepare-netlify-tunnel.sh` menyiapkan akun dan hak akses; jalankan hanya sebagai root pada server TAJAM setelah public key khusus tersedia di `/root/tajam-netlify.pub`. Jangan memakai key root untuk Netlify.
 
-Banner hijau hanya aktif ketika `NETLIFY=true`. Server Lab1 tetap memakai koneksi langsung internal. Sebelum beralih, uji pembacaan melalui tunnel; setelah deploy, periksa login dan akses API terautentikasi. Build dan unit test tidak membuktikan konektivitas dari lingkungan Netlify.
+Banner hijau aktif melalui `NEXT_PUBLIC_TAJAM_MIGRATION_BANNER=true` pada konfigurasi build Netlify. Server Lab1 tetap memakai koneksi langsung internal. Sebelum beralih, uji pembacaan melalui tunnel; setelah deploy, periksa login dan akses API terautentikasi. Build dan unit test tidak membuktikan konektivitas dari lingkungan Netlify.
 
 Kode publik tidak berarti data aplikasi publik. Database, daftar anggota, dan kredensial tetap berada di environment server. Admin dapat melihat seluruh FTI; Editor dan Viewer hanya dapat mengakses prodi yang berada dalam cakupannya.
 
